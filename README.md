@@ -1,6 +1,6 @@
 # PB1: baza za podjetje Ekol
 
-Podjetje Ekol d.o.o. [https://ekorel.ekol.si/] je eno izmed največjih slovenskih podjetij, ki se ukvarjajo z odstranjevanjem nevarnih odpadkov. Njihov poslovni model temelji na prevzemu nevarnih odpadkov, skladiščenju ter njihovi nadaljni predelavi oziroma uničenju.
+Podjetje [Ekol d.o.o.](https://ekorel.ekol.si/) je eno izmed največjih slovenskih podjetij, ki se ukvarjajo z odstranjevanjem nevarnih odpadkov. Njihov poslovni model temelji na prevzemu nevarnih odpadkov, skladiščenju ter njihovi nadaljni predelavi oziroma uničenju.
 
 Podjetje že ima bazo za obdelovanje naročil, nima pa še baze, ki bi beležila njihovo trenutno zalogo (tj. trenutno količino skladiščenih odpadkov). Zato se bova osredotočila na beleženje skladiščenih odpadkov.
 
