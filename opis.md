@@ -50,13 +50,13 @@ Na obrazcu izpisa mara izpisati datum in uro obdelave podatkov.
 
 # Excelove tabele:
 
-## ND_00_Seznam klasifikacij po dovoljenjih
+## (1.) ND_00_Seznam klasifikacij po dovoljenjih
 Potrebujemo tabelo `Klasifikacije_uredba`.
 - Klasifikacijska številka
 - Naziv odpadka
 - NEVAREN - ne rabimo
 
-## 001_Evidenca_odpadko_v_skladiscu
+## (2.) 001_Evidenca_odpadko_v_skladiscu
 - Vhod je primer vnašanja podatkov
 - Izhod je primer vnašanja podatkov
 - Podatki: nerelevantno
