@@ -11,3 +11,5 @@ Oseba zadolžena za kontrolo nad skladiščenim blagom nama bo posredovala njiho
 O lastnostih podatkov se bova s kontaktnjimi osebami dogovorila okvirno prihodnji teden. V osnovi pa bova beležila količine posameznih nevarnih odpadkov v posameznem skladišču.
 
 Spletni vmesnik bo predvidoma omogočal, da bo oseba preverjala zasedenost skladišč, trenutne količine posameznih skladiščenih nevarnih odpadkov (tako v posameznem skladišču kot tudi skupno), odstranjevanje odpadkov (tj. uničenje), prejem odpadkov (tj. nova "roba") ter premeščanje odpadkov med skladišči.
+
+<img src="./er.png">
