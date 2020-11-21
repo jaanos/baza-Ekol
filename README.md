@@ -12,4 +12,4 @@ O lastnostih podatkov se bova s kontaktnjimi osebami dogovorila okvirno prihodnj
 
 Spletni vmesnik bo predvidoma omogočal, da bo oseba preverjala zasedenost skladišč, trenutne količine posameznih skladiščenih nevarnih odpadkov (tako v posameznem skladišču kot tudi skupno), odstranjevanje odpadkov (tj. uničenje), prejem odpadkov (tj. nova "roba") ter premeščanje odpadkov med skladišči.
 
-<img src="./er.png">
+![er](./er.png)
