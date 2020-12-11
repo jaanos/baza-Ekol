@@ -111,20 +111,20 @@ for i in range(1, 297):
         leto1, mesec1, dan1, h, i, s = xlrd.xldate_as_tuple(datum_izv, dat.datemode)
         sql_datum1 = str(leto1) + '-' + str(mesec1) + '-' + str(dan1)
         if (kl_st, teza) in sez_podatkov.keys():
-            sez_podatkov[kl_st, teza]['dat_iz'] = datum_izv
+            sez_podatkov[kl_st, teza]['dat_iz'] = sql_datum1
             sez_podatkov[kl_st, teza]['op_iz'] = opomba_izvoz
 
 # vpis v tabelo odpadki
-#for (kl, teza), slo in sez_podatkov.items():
-#    sql = '''
-#        INSERT INTO odpadek 
-#        (teza, povzrocitelj, prejemnik, datum_uvoza, opomba_uvoz, datum_izvoza, opomba_izvoz, klasifikacijska_stevilka, skladisce ) 
-#        VALUES 
-#        ("{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}", "{8}");
-#        '''.format(teza, sez_podatkov[kl, teza].get('pov', ''), '', sez_podatkov[kl, teza].get('dat_uv', ''), 
-#        sez_podatkov[kl, teza].get('op_uv', ''), sez_podatkov[kl, teza].get('dat_iz', ''), sez_podatkov[kl, teza].get('op_iz', ''), 
-#        kl, sez_podatkov[kl, teza].get('skl', ''))  
-#    kazalec.execute(sql) 
+for (kl, teza), slo in sez_podatkov.items():
+    sql = '''
+        INSERT INTO odpadek 
+        (teza, povzrocitelj, prejemnik, datum_uvoza, opomba_uvoz, datum_izvoza, opomba_izvoz, klasifikacijska_stevilka, skladisce ) 
+        VALUES 
+        ("{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}", "{8}");
+        '''.format(teza, sez_podatkov[kl, teza].get('pov', ''), '', sez_podatkov[kl, teza].get('dat_uv', ''), 
+        sez_podatkov[kl, teza].get('op_uv', ''), sez_podatkov[kl, teza].get('dat_iz', ''), sez_podatkov[kl, teza].get('op_iz', ''), 
+        kl, sez_podatkov[kl, teza].get('skl', ''))  
+    kazalec.execute(sql) 
 povezava.commit()
 kazalec.close()
 povezava.close()
