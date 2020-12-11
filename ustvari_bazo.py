@@ -1,0 +1,10 @@
+import sqlite3 as dbapi
+povezava = dbapi.connect('Ekol.sqlite')
+kazalec = povezava.cursor()
+tex_ukazi = open(r"C:\Matej\GutHub\baza-Ekol\xd.txt", mode = 'r', encoding = "utf8")
+sql_ukazi = tex_ukazi.read()
+tex_ukazi.close()
+kazalec.executescript(sql_ukazi)
+povezava.commit()
+kazalec.close()
+povezava.close()
