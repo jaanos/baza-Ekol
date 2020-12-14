@@ -3,7 +3,7 @@ povezava = dbapi.connect('Ekol.sqlite')
 kazalec = povezava.cursor()
 import xlrd
 
-pot1 = (r"c:\Matej\GutHub\baza-Ekol\ND_00_Seznam klasifikacij po dovoljenjih.xlsx")
+pot1 = ("ND_00_Seznam klasifikacij po dovoljenjih.xlsx")
  
 
 dat = xlrd.open_workbook(pot1)
@@ -25,42 +25,42 @@ slo_klas_ste_ime = dict() # zato, da imam za kasnejše tabele, te ključe nekje 
 #    kl_st = list2.cell_value(i, 0)
 #    ime = list2.cell_value(i, 1)
 #    slo_klas_ste_ime[kl_st] = ime
-#    kazalec.execute('INSERT INTO vrsta_odpadka (klasifikacijska_stevilka, naziv) VALUES ("{0}", "{1}");'.format(kl_st, ime))
+#    kazalec.execute('INSERT INTO vrsta_odpadka (klasifikacijska_stevilka, naziv) VALUES (?, ?);', [kl_st, ime])
 
 
 # bilo izvedeno v SQLlite
-pot2 = (r"c:\Matej\GutHub\baza-Ekol\001_Evidenca_odpadko_v_skladiscu.xlsm")
+pot = (r"001_Evidenca_odpadko_v_skladiscu.xlsm")
 
 
-dat2 = xlrd.open_workbook(pot2)
+dat2 = xlrd.open_workbook(pot)
 # da bomo tabelo podjetja napolnit
 list3 = dat2.sheet_by_index(4)
 # v množico zato da bomo dali samo različna podjetja
-pod = set()
-slo_vmesni = dict()
 # 334 vrstic
 slo_id_podjetje = dict() # zato da bo id od podjetja nekje shranjen
-for i in range(1, 334):
-    vred = list3.cell_value(i, 1)
-    if vred and vred not in {'x', 'X'}:
-        # z velikimi črkami zaradi neusklajenosti pisanja v excellu
-        pod.add('INSERT INTO podjetje (ime) VALUES ("{0}");'.format(vred.upper()))
-        slo_vmesni['INSERT INTO podjetje (ime) VALUES ("{0}");'.format(vred.upper())] = vred.upper()
-# zapisv SQL
-#for id, elt in enumerate(pod):
-#    slo_id_podjetje[slo_vmesni[elt]] = id + 1
-#    kazalec.execute(elt)
-#print(slo_id_podjetje)
+mn_pod = set()
+st = 0
+#for i in range(1, 334):
+#    vred = list3.cell_value(i, 1)
+#    if vred and vred not in {'x', 'X'}:
+#        pod = vred.upper()
+#        if pod not in mn_pod:
+#            # z velikimi črkami zaradi neusklajenosti pisanja v excellu
+#            mn_pod.add(pod)
+#            kazalec.execute('INSERT INTO podjetje (ime) VALUES (?);', [pod])
+#            slo_id_podjetje[pod] = st + 1
+#            st += 1
+        
+
+
 # zaradi tega ker iteriranje po  množici ni enolično smo v slo_id_podjetje shranili primer, ki sovpada id v tabeli podjetja
-slo_id_podjetje = {'POCLAIN': 1, 'PIPISTERL': 2, 'SREČO': 3, 'DIHTA': 4, 'GEBRUDER WEIS': 5, 'KONICA': 6, 'INTECTIV': 7, 
-                    'EKOL': 8, 'AKRAPOVIČ': 9, 'JENKO ZORAN': 10, 'PREIS SEVNICA': 11, 'KOVINC': 12, 'BOSCH': 13, 'LINGVA': 14, 
-                    'HELLA': 15, 'TURBOINSTANT': 16, 'LIVAR': 17, 'AUTOCOMMERCE': 18, 'ELAN': 19, 'KNAUF': 20, 'REM': 21, 
-                    'SNAGA LJUBLJANA': 22, 'XENON FORTE': 23, 'YUSKAWA': 24, 'EGP': 25, 'ISKRA GALVANIKA': 26, 'ADRIA MOBIL': 27, 
-                    'ELGOLINE': 28, 'EKOINŽINIRING': 29, 'LIDL': 30, 'LAKOLIT': 31, 'ISKRA ISD': 32}
 
 slo_sklad = {'Sklad-3': 3, 'Sklad-7': 7}
 
-pot = (r"c:\Matej\GutHub\baza-Ekol\001_Evidenca_odpadko_v_skladiscu.xlsm")
+#for kl, vr in slo_sklad.items():
+#    kazalec.execute('INSERT INTO skladisce (id, ime) VALUES (?, ?);', [vr, kl])
+
+
 
 
 dat = xlrd.open_workbook(pot)
@@ -82,7 +82,10 @@ for i in range(1, 334):
         if povzrocitelj.upper() in slo_id_podjetje.keys():
             povzrocitelj = slo_id_podjetje[povzrocitelj.upper()]
         else:
-            povzrocitelj = povzrocitelj.upper()
+            if povzrocitelj not in {'x', 'X'}:
+                povzrocitelj = povzrocitelj.upper()
+            else:
+                povzrocitelj = ''
         if sklad in slo_sklad.keys():
             sklad = slo_sklad[sklad]
         
@@ -116,15 +119,15 @@ for i in range(1, 297):
 
 # vpis v tabelo odpadki
 for (kl, teza), slo in sez_podatkov.items():
-    sql = '''
+    kazalec.execute( '''
         INSERT INTO odpadek 
         (teza, povzrocitelj, prejemnik, datum_uvoza, opomba_uvoz, datum_izvoza, opomba_izvoz, klasifikacijska_stevilka, skladisce ) 
         VALUES 
-        ("{0}", "{1}", "{2}", "{3}", "{4}", "{5}", "{6}", "{7}", "{8}");
-        '''.format(teza, sez_podatkov[kl, teza].get('pov', ''), '', sez_podatkov[kl, teza].get('dat_uv', ''), 
+        (?, ?, ?, ?, ?, ?, ?, ?, ?);
+        ''', [teza, sez_podatkov[kl, teza].get('pov', ''), '', sez_podatkov[kl, teza].get('dat_uv', ''), 
         sez_podatkov[kl, teza].get('op_uv', ''), sez_podatkov[kl, teza].get('dat_iz', ''), sez_podatkov[kl, teza].get('op_iz', ''), 
-        kl, sez_podatkov[kl, teza].get('skl', ''))  
-    kazalec.execute(sql) 
+        kl, sez_podatkov[kl, teza].get('skl', '')]  
+    ) 
 povezava.commit()
 kazalec.close()
 povezava.close()
