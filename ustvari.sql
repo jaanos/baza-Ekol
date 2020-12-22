@@ -25,6 +25,6 @@ CREATE TABLE odpadek (
     datum_izvoza             DATE,
     opomba_izvoz             TEXT,
     klasifikacijska_stevilka VARCHAR (9) NOT NULL
-                                         REFERENCES vrsta (klasifikacijska_stevilka),
+                                         REFERENCES vrsta_odpadkas(klasifikacijska_stevilka),
     skladisce                INTEGER     REFERENCES skladisce (id) 
 );
