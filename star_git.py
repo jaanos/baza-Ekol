@@ -1,6 +1,7 @@
 import os
 import sqlite3
 import xlrd
+from geslo import sifriraj_geslo
 
 PARAM_FMT = ":{}"
 
@@ -55,8 +56,39 @@ class Tabela:
         cur = self.conn.execute(poizvedba, podatki)
         return cur.lastrowid
 
+class Uporabnik(Tabela):
+    """
+    Tabela za uporabnike.
+    """
+    ime = "uporabnik"
+    podatki = "podatki/uporabnik.csv"
+
+    def ustvari(self):
+        """
+        Ustvari tabelo uporabnik.
+        """
+        self.conn.execute("""
+            CREATE TABLE uporabnik (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                ime       TEXT NOT NULL UNIQUE,
+                zgostitev TEXT NOT NULL,
+                sol       TEXT NOT NULL
+            )
+        """)
+
+    def dodaj_vrstico(self, /, **podatki):
+        """
+        Dodaj uporabnika.
+        Če sol ni podana, zašifrira podano geslo.
+        Argumenti:
+        - poimenovani parametri: vrednosti v ustreznih stolpcih
+        """
+        if podatki.get("sol", None) is None and podatki.get("zgostitev", None) is not None:
+            podatki["zgostitev"], podatki["sol"] = sifriraj_geslo(podatki["zgostitev"])
+        return super().dodaj_vrstico(**podatki)
+
 class Podjetja(Tabela):
-    ime = 'podjetje'
+    ime = 'podjetja'
     def ustvari(self):
         self.conn.execute('''
                 CREATE TABLE podjetje (
@@ -144,7 +176,7 @@ class Odpadek(Tabela):
         parametri = [
             teza, 
             sez_podatkov.get('pov', ''), 
-            '', 
+            sez_podatkov.get('pre', ''), 
             sez_podatkov.get('dat_uv', ''), 
             sez_podatkov.get('op_uv', ''), 
             sez_podatkov.get('dat_iz', ''), 
@@ -289,11 +321,12 @@ def pripravi_tabele(conn):
     """
     Pripravi objekte za tabele.
     """
+    uporabnik = Uporabnik(conn)
     podjetja = Podjetja(conn)
     vrsta_odpadka = VrstaOdpadka(conn)
     skladisce = Skladisce(conn)
     odpadek = Odpadek(conn)
-    return [podjetja, vrsta_odpadka, skladisce, odpadek]
+    return [uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek]
 
 
 def ustvari_bazo_ce_ne_obstaja(conn):
