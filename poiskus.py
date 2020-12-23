@@ -63,16 +63,23 @@ class Podjetja(Tabela):
                 id  INTEGER PRIMARY KEY AUTOINCREMENT,
                 ime TEXT    NOT NULL
             );''')
-    def dodaj_vrstico(self, podjetje):
-        sql = '''
-            INSERT INTO podjetje 
-            (ime) 
-            VALUES (?)
-        '''
-        parametri = [
-            podjetje
-        ]
-        self.execute(sql, parametri)
+    def dodaj_vrstico(self, /, **podatki):
+        """
+        Dodaj žanr.
+        Če žanr že obstaja, vrne obstoječi ID.
+        Argumenti:
+        - poimenovani parametri: vrednosti v ustreznih stolpcih
+        """
+        cur = self.conn.execute("""
+            SELECT id FROM podjetja
+            WHERE ime = :ime;
+        """, podatki)
+        r = cur.fetchone()
+        if r is None:
+            return super().dodaj_vrstico(**podatki)
+        else:
+            id, = r
+            return id
 
 class VrstaOdpadka(Tabela):
     ime = 'vrsta_odpadka'
@@ -83,18 +90,13 @@ class VrstaOdpadka(Tabela):
                                              CHECK (klasifikacijska_stevilka LIKE '__ __ __%'),
                     naziv                    TEXT        NOT NULL
                 );''')
-    def dodaj_vrstico(self, kl_stevilka, ime):
-        sql = '''
-            INSERT INTO vrsta_odpadka 
-            (klasifikacijska_stevilka, naziv) 
-            VALUES 
-            (?, ?)
-            '''
-        parametri = [
-            kl_stevilka,
-            ime,
-        ]
-        self.execute(sql, parametri)
+    def dodaj_vrstico(self, /, **podatki):
+        """
+        Dodaj odpadek.
+        Argumenti:
+        - poimenovani parametri: vrednosti v ustreznih stolpcih
+        """
+        return super().dodaj_vrstico(**podatki)
 
 class Skladisce(Tabela):
     ime = 'skladisce'
@@ -104,17 +106,13 @@ class Skladisce(Tabela):
                     id  INTEGER PRIMARY KEY,
                     ime TEXT    NOT NULL
                 );''')
-    def dodaj_vrstico(self, ime, st):
-        sql = '''
-            INSERT INTO skladisce 
-            (id, ime) 
-            VALUES (?, ?)
-        '''
-        parametri = [
-            st,
-            ime,
-        ]
-        self.execute(sql, parametri)
+    def dodaj_vrstico(self, /, **podatki):
+        """
+        Dodaj odpadek.
+        Argumenti:
+        - poimenovani parametri: vrednosti v ustreznih stolpcih
+        """
+        return super().dodaj_vrstico(**podatki)
 
 class Odpadek(Tabela):
     ime = 'odpadek'
@@ -134,25 +132,13 @@ class Odpadek(Tabela):
                                                          REFERENCES vrsta_odpadka (klasifikacijska_stevilka),
                     skladisce                INTEGER     REFERENCES skladisce (id) 
                 );''')
-    def dodaj_vrstico(self, kl, teza, sez_podatkov):
-        sql = '''
-            INSERT INTO odpadek 
-            (teza, povzrocitelj, prejemnik, datum_uvoza, opomba_uvoz, datum_izvoza, opomba_izvoz, klasifikacijska_stevilka, skladisce) 
-            VALUES 
-            (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            '''
-        parametri = [
-            teza, 
-            sez_podatkov.get('pov', ''), 
-            '', 
-            sez_podatkov.get('dat_uv', ''), 
-            sez_podatkov.get('op_uv', ''), 
-            sez_podatkov.get('dat_iz', ''), 
-            sez_podatkov.get('op_iz', ''), 
-            kl, 
-            sez_podatkov.get('skl', '')
-            ] 
-        self.execute(sql, parametri)
+    def dodaj_vrstico(self, /, **podatki):
+        """
+        Dodaj odpadek.
+        Argumenti:
+        - poimenovani parametri: vrednosti v ustreznih stolpcih
+        """
+        return super().dodaj_vrstico(**podatki)
     
 
 
@@ -174,14 +160,32 @@ def izbrisi_tabele(tabele):
 def napolni_tabele(conn, slo_klas_ste_ime, slo_id_podjetje, slo_sklad, sez_podatkov):
     # najprej napolnimo tabelo z vrsta odpadka
     for kl, ime in slo_klas_ste_ime.items():
-        VrstaOdpadka.dodaj_vrstico(conn, kl, ime)
+        nov = dict()
+        nov['klasifikacijska_stevilka'] = kl
+        nov['naziv'] = ime
+        VrstaOdpadka.dodaj_vrstico(nov)
     for podjetje in slo_id_podjetje:
-        Podjetja.dodaj_vrstico(conn, podjetje)
+        nov = dict()
+        nov['podjetje'] = podjetje
+        Podjetja.dodaj_vrstico(nov)
     for ime, st in slo_sklad.items():
-        Skladisce.dodaj_vrstico(conn, ime, st)
+        nov = dict()
+        nov['ime'] = ime
+        nov['id'] = st
+        Skladisce.dodaj_vrstico(nov)
     for (kl, teza), slo in sez_podatkov.items():
-        Odpadek.dodaj_vrstico(conn, kl, teza, slo)
+        nov = dict()
+        nov['klasifikacijska_stevilka'] = kl
+        nov['teza'] = teza
+        nov['povzrocitelj'] = slo.get('pov')
+        nov['opomba_uvoz'] = slo.get('op_uv')
+        nov['skladisce'] = slo.get('skl')
+        nov['datum_uvoza'] = slo.get('dat_uv')
+        nov['datum_izvoza'] = slo.get('dat_iz')
+        nov['opomba_izvoza'] = slo.get('op_iz')
+        Odpadek.dodaj_vrstico(nov)
     conn.commit()
+
 
 def uvozi_podatke(tabele, conn):
     """
@@ -189,7 +193,6 @@ def uvozi_podatke(tabele, conn):
     """
     slo_sklad = {'Sklad-3': 3, 'Sklad-7': 7}
     IME_DATOTEKE_Z_BAZO = conn
-    IME_DATOTEKE_Z_SQL_UKAZI = 'ustvari.sql'
     IME_DATOTEKE_S_PODATKI1 = "ND_00_Seznam klasifikacij po dovoljenjih.xlsx"
     IME_DATOTEKE_S_PODATKI2 = "001_Evidenca_odpadko_v_skladiscu.xlsm"
     dat = xlrd.open_workbook(IME_DATOTEKE_S_PODATKI1)

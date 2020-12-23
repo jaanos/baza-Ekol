@@ -1,3 +1,8 @@
+import xlrd
+import os
+import sqlite3
+from baza import napolni_tabele
+
 def naredi_bazo_ekol(pobrisi_ce_obstaja = False):
     slo_sklad = {'Sklad-3': 3, 'Sklad-7': 7}
     IME_DATOTEKE_Z_BAZO = '../Ekol.sqlite'

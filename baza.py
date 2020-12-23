@@ -1,5 +1,5 @@
 import os
-#import sqlite3
+import sqlite3
 import xlrd
 from geslo import sifriraj_geslo
 
@@ -337,3 +337,5 @@ def ustvari_bazo_ce_ne_obstaja(conn):
         cur = conn.execute("SELECT COUNT(*) FROM sqlite_master")
         if cur.fetchone() == (0, ):
             ustvari_bazo(conn)
+conn = sqlite3.connect('Ekol1.sqlite')
+ustvari_bazo_ce_ne_obstaja(conn)
