@@ -72,7 +72,7 @@ class Podjetja:
     def dodaj_v_bazo(self):
         assert self.id is None
         with conn:
-            id = podjetja.dodaj_vrstico(self.ime)
+            id = podjetja.dodaj_vrstico(ime=self.ime)
             self.id = id
 
 
@@ -84,7 +84,7 @@ class VrstaOdpadka:
         return self.naziv
     def dodaj_v_bazo(self):
         with conn:
-            vrsta_odpadka.dodaj_vrstico(self.klasifikacijska_stevilka, self.naziv)
+            vrsta_odpadka.dodaj_vrstico(klasifikacijska_stevilka=self.klasifikacijska_stevilka, naziv=self.naziv)
 
 class Skladisce:
     def __init__(self, id, ime):
@@ -94,7 +94,7 @@ class Skladisce:
         return self.ime
     def dodaj_v_bazo(self):
         with conn:
-            skladisce.dodaj_vrstico(self.ime, self.id)
+            skladisce.dodaj_vrstico(ime=self.ime, id=self.id)
 
 class Odpadek:
     def __init__(self, id, teza, povzrocitelj, klasifikacijska_stevilka, skladisce, datum_uvoza, opomba_uvoza=None, datum_izvoza=None, opomba_izvoza=None, prejemnik=None):
@@ -108,13 +108,13 @@ class Odpadek:
         self.datum_izvoza = datum_izvoza
         self.opomba_izvoza = opomba_izvoza
         self.prejemnik = prejemnik
-    def dodaj_v_bazo(self):
+    def dodaj_v_bazo(self, teza, povzrocitelj, klasifikacijska_stevilka, skladisce, datum_uvoza):
         slo = dict()
-        slo['pov'] = self.povzrocitelj
+        slo['pov'] = povzrocitelj
         slo['pre'] = self.prejemnik
-        slo['dat_uv'] = self.datumm_uvoza
+        slo['dat_uv'] = datumm_uvoza
         slo['op_uv'] = self.opomba_uvoza
         slo['dat_iz'] = self.datum_izvoza
         slo['op_iz'] = self.opomba_izvoza
-        slo['skl'] = self.skladisce
-        odpadek.dodaj_vrstico(self.klasifikacijska_stevilka, self.teza, slo)
+        slo['skl'] = skladisce
+        odpadek.dodaj_vrstico(klasifikacijska_stevilka, teza, slo)

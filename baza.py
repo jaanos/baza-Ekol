@@ -66,7 +66,6 @@ class Uporabnik(Tabela):
     Tabela za uporabnike.
     """
     ime = "uporabnik"
-    podatki = "podatki/uporabnik.csv"
 
     def ustvari(self):
         """
