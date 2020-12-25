@@ -25,6 +25,12 @@ class Tabela:
         Podrazredi morajo povoziti to metodo.
         """
         raise NotImplementedError
+    def uvozi(self):
+        """
+        Metoda za uvažanke podatkov.
+        Podrazredi morajo povoziti to metodo.
+        """
+        raise NotImplementedError
     def izbrisi(self):
         """
         Metoda za brisanje tabele.
@@ -55,6 +61,37 @@ class Tabela:
         cur = self.conn.execute(poizvedba, podatki)
         return cur.lastrowid
 
+class Uporabnik(Tabela):
+    """
+    Tabela za uporabnike.
+    """
+    ime = "uporabnik"
+    podatki = "podatki/uporabnik.csv"
+
+    def ustvari(self):
+        """
+        Ustvari tabelo uporabnik.
+        """
+        self.conn.execute("""
+            CREATE TABLE uporabnik (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                ime       TEXT NOT NULL UNIQUE,
+                zgostitev TEXT NOT NULL,
+                sol       TEXT NOT NULL
+            )
+        """)
+
+    def dodaj_vrstico(self, /, **podatki):
+        """
+        Dodaj uporabnika.
+        Če sol ni podana, zašifrira podano geslo.
+        Argumenti:
+        - poimenovani parametri: vrednosti v ustreznih stolpcih
+        """
+        if podatki.get("sol", None) is None and podatki.get("zgostitev", None) is not None:
+            podatki["zgostitev"], podatki["sol"] = sifriraj_geslo(podatki["zgostitev"])
+        return super().dodaj_vrstico(**podatki)
+
 class Podjetja(Tabela):
     ime = 'podjetje'
     def ustvari(self):
@@ -71,7 +108,7 @@ class Podjetja(Tabela):
         - poimenovani parametri: vrednosti v ustreznih stolpcih
         """
         cur = self.conn.execute("""
-            SELECT id FROM podjetja
+            SELECT id FROM podjetje
             WHERE ime = :ime;
         """, podatki)
         r = cur.fetchone()
@@ -80,6 +117,11 @@ class Podjetja(Tabela):
         else:
             id, = r
             return id
+    def uvozi(self, slo_id_podjetje):
+        for podjetje in slo_id_podjetje:
+            nov = dict()
+            nov['ime'] = podjetje
+            self.dodaj_vrstico(**nov)
 
 class VrstaOdpadka(Tabela):
     ime = 'vrsta_odpadka'
@@ -90,13 +132,12 @@ class VrstaOdpadka(Tabela):
                                              CHECK (klasifikacijska_stevilka LIKE '__ __ __%'),
                     naziv                    TEXT        NOT NULL
                 );''')
-    def dodaj_vrstico(self, /, **podatki):
-        """
-        Dodaj odpadek.
-        Argumenti:
-        - poimenovani parametri: vrednosti v ustreznih stolpcih
-        """
-        return super().dodaj_vrstico(**podatki)
+    def uvozi(self, slo_klas_ste_ime):
+        for kl, ime in slo_klas_ste_ime.items():
+            nov = dict()
+            nov['klasifikacijska_stevilka'] = kl
+            nov['naziv'] = ime
+            self.dodaj_vrstico(**nov)
 
 class Skladisce(Tabela):
     ime = 'skladisce'
@@ -106,13 +147,10 @@ class Skladisce(Tabela):
                     id  INTEGER PRIMARY KEY,
                     ime TEXT    NOT NULL
                 );''')
-    def dodaj_vrstico(self, /, **podatki):
-        """
-        Dodaj odpadek.
-        Argumenti:
-        - poimenovani parametri: vrednosti v ustreznih stolpcih
-        """
-        return super().dodaj_vrstico(**podatki)
+    def uvozi(self, slo_sklad):
+        for ime, st in slo_sklad.items():
+            nov = {'id': st, 'ime': ime} 
+            self.dodaj_vrstico(**nov)
 
 class Odpadek(Tabela):
     ime = 'odpadek'
@@ -132,13 +170,19 @@ class Odpadek(Tabela):
                                                          REFERENCES vrsta_odpadka (klasifikacijska_stevilka),
                     skladisce                INTEGER     REFERENCES skladisce (id) 
                 );''')
-    def dodaj_vrstico(self, /, **podatki):
-        """
-        Dodaj odpadek.
-        Argumenti:
-        - poimenovani parametri: vrednosti v ustreznih stolpcih
-        """
-        return super().dodaj_vrstico(**podatki)
+    def uvozi(self, sez_podatkov):
+        for (kl, teza), slo in sez_podatkov.items():
+            nov = dict()
+            nov['klasifikacijska_stevilka'] = kl
+            nov['teza'] = teza
+            nov['prejemnik'] = ''
+            nov['povzrocitelj'] = slo.get('pov', '')
+            nov['opomba_uvoz'] = slo.get('op_uv', '')
+            nov['skladisce'] = slo.get('skl', '')
+            nov['datum_uvoza'] = slo.get('dat_uv', '')
+            nov['datum_izvoza'] = slo.get('dat_iz', '')
+            nov['opomba_izvoz'] = slo.get('op_iz', '')
+            self.dodaj_vrstico(**nov)
     
 
 
@@ -157,34 +201,6 @@ def izbrisi_tabele(tabele):
     for t in tabele:
         t.izbrisi()
 
-def napolni_tabele(conn, slo_klas_ste_ime, slo_id_podjetje, slo_sklad, sez_podatkov):
-    # najprej napolnimo tabelo z vrsta odpadka
-    for kl, ime in slo_klas_ste_ime.items():
-        nov = dict()
-        nov['klasifikacijska_stevilka'] = kl
-        nov['naziv'] = ime
-        VrstaOdpadka.dodaj_vrstico(nov)
-    for podjetje in slo_id_podjetje:
-        nov = dict()
-        nov['podjetje'] = podjetje
-        Podjetja.dodaj_vrstico(nov)
-    for ime, st in slo_sklad.items():
-        nov = dict()
-        nov['ime'] = ime
-        nov['id'] = st
-        Skladisce.dodaj_vrstico(nov)
-    for (kl, teza), slo in sez_podatkov.items():
-        nov = dict()
-        nov['klasifikacijska_stevilka'] = kl
-        nov['teza'] = teza
-        nov['povzrocitelj'] = slo.get('pov')
-        nov['opomba_uvoz'] = slo.get('op_uv')
-        nov['skladisce'] = slo.get('skl')
-        nov['datum_uvoza'] = slo.get('dat_uv')
-        nov['datum_izvoza'] = slo.get('dat_iz')
-        nov['opomba_izvoza'] = slo.get('op_iz')
-        Odpadek.dodaj_vrstico(nov)
-    conn.commit()
 
 
 def uvozi_podatke(tabele, conn):
@@ -266,7 +282,17 @@ def uvozi_podatke(tabele, conn):
             if (kl_st, teza) in sez_podatkov.keys():
                 sez_podatkov[kl_st, teza]['dat_iz'] = sql_datum1
                 sez_podatkov[kl_st, teza]['op_iz'] = opomba_izvoz
-    napolni_tabele(conn, slo_klas_ste_ime, slo_id_podjetje, slo_sklad, sez_podatkov)
+    uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek = tabele
+    with conn:
+
+        vrsta_odpadka.uvozi(slo_klas_ste_ime)
+
+        podjetja.uvozi(slo_id_podjetje)
+
+        skladisce.uvozi(slo_sklad)
+
+        odpadek.uvozi(sez_podatkov)
+
     conn.execute('VACUUM')
 
 
@@ -287,16 +313,16 @@ def ustvari_bazo(conn):
     ustvari_tabele(tabele)
     uvozi_podatke(tabele, conn)
 
-
 def pripravi_tabele(conn):
     """
     Pripravi objekte za tabele.
     """
+    uporabnik = Uporabnik(conn)
     podjetja = Podjetja(conn)
     vrsta_odpadka = VrstaOdpadka(conn)
     skladisce = Skladisce(conn)
     odpadek = Odpadek(conn)
-    return [podjetja, vrsta_odpadka, skladisce, odpadek]
+    return [uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek]
 
 
 def ustvari_bazo_ce_ne_obstaja(conn):
@@ -307,5 +333,5 @@ def ustvari_bazo_ce_ne_obstaja(conn):
         cur = conn.execute("SELECT COUNT(*) FROM sqlite_master")
         if cur.fetchone() == (0, ):
             ustvari_bazo(conn)
-conn = sqlite3.connect('Ekol1.sqlite')
+conn = sqlite3.connect('Ekol.sqlite')
 ustvari_bazo_ce_ne_obstaja(conn)
