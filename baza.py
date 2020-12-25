@@ -1,7 +1,6 @@
 import os
 import sqlite3
 import xlrd
-from geslo import sifriraj_geslo
 
 PARAM_FMT = ":{}"
 
@@ -23,6 +22,12 @@ class Tabela:
     def ustvari(self):
         """
         Metoda za ustvarjanje tabele.
+        Podrazredi morajo povoziti to metodo.
+        """
+        raise NotImplementedError
+    def uvozi(self):
+        """
+        Metoda za uvažanke podatkov.
         Podrazredi morajo povoziti to metodo.
         """
         raise NotImplementedError
@@ -88,23 +93,35 @@ class Uporabnik(Tabela):
         return super().dodaj_vrstico(**podatki)
 
 class Podjetja(Tabela):
-    ime = 'podjetja'
+    ime = 'podjetje'
     def ustvari(self):
         self.conn.execute('''
                 CREATE TABLE podjetje (
                 id  INTEGER PRIMARY KEY AUTOINCREMENT,
                 ime TEXT    NOT NULL
             );''')
-    def dodaj_vrstico(self, podjetje):
-        sql = '''
-            INSERT INTO podjetje 
-            (ime) 
-            VALUES (?)
-        '''
-        parametri = [
-            podjetje
-        ]
-        self.conn.execute(sql, parametri)
+    def dodaj_vrstico(self, /, **podatki):
+        """
+        Dodaj žanr.
+        Če žanr že obstaja, vrne obstoječi ID.
+        Argumenti:
+        - poimenovani parametri: vrednosti v ustreznih stolpcih
+        """
+        cur = self.conn.execute("""
+            SELECT id FROM podjetje
+            WHERE ime = :ime;
+        """, podatki)
+        r = cur.fetchone()
+        if r is None:
+            return super().dodaj_vrstico(**podatki)
+        else:
+            id, = r
+            return id
+    def uvozi(self, slo_id_podjetje):
+        for podjetje in slo_id_podjetje:
+            nov = dict()
+            nov['ime'] = podjetje
+            self.dodaj_vrstico(**nov)
 
 class VrstaOdpadka(Tabela):
     ime = 'vrsta_odpadka'
@@ -115,18 +132,12 @@ class VrstaOdpadka(Tabela):
                                              CHECK (klasifikacijska_stevilka LIKE '__ __ __%'),
                     naziv                    TEXT        NOT NULL
                 );''')
-    def dodaj_vrstico(self, kl_stevilka, ime):
-        sql = '''
-            INSERT INTO vrsta_odpadka 
-            (klasifikacijska_stevilka, naziv) 
-            VALUES 
-            (?, ?)
-            '''
-        parametri = [
-            kl_stevilka,
-            ime,
-        ]
-        self.conn.execute(sql, parametri)
+    def uvozi(self, slo_klas_ste_ime):
+        for kl, ime in slo_klas_ste_ime.items():
+            nov = dict()
+            nov['klasifikacijska_stevilka'] = kl
+            nov['naziv'] = ime
+            self.dodaj_vrstico(**nov)
 
 class Skladisce(Tabela):
     ime = 'skladisce'
@@ -136,17 +147,10 @@ class Skladisce(Tabela):
                     id  INTEGER PRIMARY KEY,
                     ime TEXT    NOT NULL
                 );''')
-    def dodaj_vrstico(self, ime, st):
-        sql = '''
-            INSERT INTO skladisce 
-            (id, ime) 
-            VALUES (?, ?)
-        '''
-        parametri = [
-            st,
-            ime,
-        ]
-        self.conn.execute(sql, parametri)
+    def uvozi(self, slo_sklad):
+        for ime, st in slo_sklad.items():
+            nov = {'id': st, 'ime': ime} 
+            self.dodaj_vrstico(**nov)
 
 class Odpadek(Tabela):
     ime = 'odpadek'
@@ -166,25 +170,19 @@ class Odpadek(Tabela):
                                                          REFERENCES vrsta_odpadka (klasifikacijska_stevilka),
                     skladisce                INTEGER     REFERENCES skladisce (id) 
                 );''')
-    def dodaj_vrstico(self, kl, teza, sez_podatkov):
-        sql = '''
-            INSERT INTO odpadek 
-            (teza, povzrocitelj, prejemnik, datum_uvoza, opomba_uvoz, datum_izvoza, opomba_izvoz, klasifikacijska_stevilka, skladisce) 
-            VALUES 
-            (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            '''
-        parametri = [
-            teza, 
-            sez_podatkov.get('pov', ''), 
-            sez_podatkov.get('pre', ''), 
-            sez_podatkov.get('dat_uv', ''), 
-            sez_podatkov.get('op_uv', ''), 
-            sez_podatkov.get('dat_iz', ''), 
-            sez_podatkov.get('op_iz', ''), 
-            kl, 
-            sez_podatkov.get('skl', '')
-            ] 
-        self.conn.execute(sql, parametri)
+    def uvozi(self, sez_podatkov):
+        for (kl, teza), slo in sez_podatkov.items():
+            nov = dict()
+            nov['klasifikacijska_stevilka'] = kl
+            nov['teza'] = teza
+            nov['prejemnik'] = ''
+            nov['povzrocitelj'] = slo.get('pov', '')
+            nov['opomba_uvoz'] = slo.get('op_uv', '')
+            nov['skladisce'] = slo.get('skl', '')
+            nov['datum_uvoza'] = slo.get('dat_uv', '')
+            nov['datum_izvoza'] = slo.get('dat_iz', '')
+            nov['opomba_izvoz'] = slo.get('op_iz', '')
+            self.dodaj_vrstico(**nov)
     
 
 
@@ -203,17 +201,7 @@ def izbrisi_tabele(tabele):
     for t in tabele:
         t.izbrisi()
 
-def napolni_tabele(conn, slo_klas_ste_ime, slo_id_podjetje, slo_sklad, sez_podatkov):
-    # najprej napolnimo tabelo z vrsta odpadka
-    for kl, ime in slo_klas_ste_ime.items():
-        VrstaOdpadka.dodaj_vrstico(conn, kl, ime)
-    for podjetje in slo_id_podjetje:
-        Podjetja.dodaj_vrstico(conn, podjetje)
-    for ime, st in slo_sklad.items():
-        Skladisce.dodaj_vrstico(conn, ime, st)
-    for (kl, teza), slo in sez_podatkov.items():
-        Odpadek.dodaj_vrstico(conn, kl, teza, slo)
-    conn.commit()
+
 
 def uvozi_podatke(tabele, conn):
     """
@@ -221,7 +209,6 @@ def uvozi_podatke(tabele, conn):
     """
     slo_sklad = {'Sklad-3': 3, 'Sklad-7': 7}
     IME_DATOTEKE_Z_BAZO = conn
-    IME_DATOTEKE_Z_SQL_UKAZI = 'ustvari.sql'
     IME_DATOTEKE_S_PODATKI1 = "ND_00_Seznam klasifikacij po dovoljenjih.xlsx"
     IME_DATOTEKE_S_PODATKI2 = "001_Evidenca_odpadko_v_skladiscu.xlsm"
     dat = xlrd.open_workbook(IME_DATOTEKE_S_PODATKI1)
@@ -295,7 +282,17 @@ def uvozi_podatke(tabele, conn):
             if (kl_st, teza) in sez_podatkov.keys():
                 sez_podatkov[kl_st, teza]['dat_iz'] = sql_datum1
                 sez_podatkov[kl_st, teza]['op_iz'] = opomba_izvoz
-    napolni_tabele(conn, slo_klas_ste_ime, slo_id_podjetje, slo_sklad, sez_podatkov)
+    uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek = tabele
+    with conn:
+
+        vrsta_odpadka.uvozi(slo_klas_ste_ime)
+
+        podjetja.uvozi(slo_id_podjetje)
+
+        skladisce.uvozi(slo_sklad)
+
+        odpadek.uvozi(sez_podatkov)
+
     conn.execute('VACUUM')
 
 
@@ -315,7 +312,6 @@ def ustvari_bazo(conn):
     izbrisi_tabele(tabele)
     ustvari_tabele(tabele)
     uvozi_podatke(tabele, conn)
-
 
 def pripravi_tabele(conn):
     """
@@ -337,5 +333,5 @@ def ustvari_bazo_ce_ne_obstaja(conn):
         cur = conn.execute("SELECT COUNT(*) FROM sqlite_master")
         if cur.fetchone() == (0, ):
             ustvari_bazo(conn)
-conn = sqlite3.connect('Ekol1.sqlite')
+conn = sqlite3.connect('Ekol.sqlite')
 ustvari_bazo_ce_ne_obstaja(conn)
