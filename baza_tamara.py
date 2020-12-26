@@ -1,7 +1,10 @@
 import os
 import sqlite3
 import xlrd
-# import geslo
+import sys
+import openpyxl.workbook
+import openpyxl.reader.excel
+import geslo
 
 PARAM_FMT = ":{}"
 
@@ -26,6 +29,14 @@ class Ekol:
     def ustvari(self):
         '''
             Metoda za ustvarjanje tabele.
+        '''
+        raise NotImplementedError
+
+
+    def uvozi(self):
+        '''
+            Metoda za uvažanke podatkov.
+            Podrazredi morajo povoziti to metodo.
         '''
         raise NotImplementedError
 
@@ -68,37 +79,36 @@ class Ekol:
 
 
 # ---------------------------------------------------------------------------------------------------------
-#   class Uporabnik(Ekol):
-#       '''
-#           Ekol za uporabnike.
-#       '''
-#       ime = "uporabnik"
-#       podatki = "podatki/uporabnik.csv"  # ti podatki so zagotovo nekje drugje
-#   
-#       def ustvari(self):
-#           '''
-#               Ustvari tabelo uporabnik.
-#           '''
-#           self.conn.execute('''
-#               CREATE TABLE uporabnik (
-#                   id        INTEGER PRIMARY KEY AUTOINCREMENT,
-#                   ime       TEXT NOT NULL UNIQUE,
-#                   zgostitev TEXT NOT NULL,
-#                   sol       TEXT NOT NULL
-#               )
-#           ''')
-#   
-#   
-#       def dodaj_vrstico(self, /, **podatki):
-#           '''
-#               Dodaj uporabnika.
-#               Če sol ni podana, zašifrira podano geslo.
-#               Argumenti:
-#                   - poimenovani parametri: vrednosti v ustreznih stolpcih
-#           '''
-#           if podatki.get("sol", None) is None and podatki.get("zgostitev", None) is not None:
-#               podatki["zgostitev"], podatki["sol"] = geslo.sifriraj_geslo(podatki["zgostitev"])
-#           return super().dodaj_vrstico(**podatki)
+class Uporabnik(Ekol):
+    '''
+        Ekol za uporabnike.
+    '''
+    ime = "uporabnik"
+
+    def ustvari(self):
+        '''
+            Ustvari tabelo uporabnik.
+        '''
+        self.conn.execute('''
+            CREATE TABLE uporabnik (
+                id        INTEGER PRIMARY KEY AUTOINCREMENT,
+                ime       TEXT NOT NULL UNIQUE,
+                zgostitev TEXT NOT NULL,
+                sol       TEXT NOT NULL
+            )
+        ''')
+
+
+    def dodaj_vrstico(self, /, **podatki):
+        '''
+            Dodaj uporabnika.
+            Če sol ni podana, zašifrira podano geslo.
+            Argumenti:
+                - poimenovani parametri: vrednosti v ustreznih stolpcih
+        '''
+        if podatki.get("sol", None) is None and podatki.get("zgostitev", None) is not None:
+            podatki["zgostitev"], podatki["sol"] = geslo.sifriraj_geslo(podatki["zgostitev"])
+        return super().dodaj_vrstico(**podatki)
 
 
 # -------------------------------------------------------------------------------------------------------
@@ -201,17 +211,17 @@ class Odpadek(Ekol):
     
     
     def uvozi(self, sez_podatkov):
-        for (kl, teza), slo in sez_podatkov.items():
+        for (kl, teza), sl in sez_podatkov.items():
             nov = dict()
             nov['klasifikacijska_stevilka'] = kl
             nov['teza'] = teza
             nov['prejemnik'] = ''
-            nov['povzrocitelj'] = slo.get('pov', '')
-            nov['opomba_uvoz'] = slo.get('op_uv', '')
-            nov['skladisce'] = slo.get('skl', '')
-            nov['datum_uvoza'] = slo.get('dat_uv', '')
-            nov['datum_izvoza'] = slo.get('dat_iz', '')
-            nov['opomba_izvoz'] = slo.get('op_iz', '')
+            nov['povzrocitelj'] = sl.get('pov', '')
+            nov['opomba_uvoz'] = sl.get('op_uv', '')
+            nov['skladisce'] = sl.get('skl', '')
+            nov['datum_uvoza'] = sl.get('dat_uv', '')
+            nov['datum_izvoza'] = sl.get('dat_iz', '')
+            nov['opomba_izvoz'] = sl.get('op_iz', '')
             self.dodaj_vrstico(**nov)
     
 
@@ -241,36 +251,14 @@ def izprazni_tabele(tabele):
         t.izprazni()
 
 
-# GROZA !!!!!!!!!!!
-def napolni_tabele(conn, sl_klas_st_ime, sl_id_podjetje, sl_sklad, sl_podatkov):
-    # najprej napolnimo tabelo z vrsta odpadka
-    for kl, ime in sl_klas_st_ime.items():
-        VrstaOdpadka.dodaj_vrstico(conn, kl, ime)
-
-    for podjetje in sl_id_podjetje:
-        Podjetje.dodaj_vrstico(conn, podjetje)
-
-    for ime, st in sl_sklad.items():
-        Skladisce.dodaj_vrstico(conn, ime, st)
-
-    for (kl, teza), slo in sl_podatkov.items():
-        Odpadek.dodaj_vrstico(conn, kl, teza, sl)
-
-    conn.commit()
-
-
 def uvozi_podatke(tabele, conn):
     '''
         Uvozi podatke v podane tabele.
     '''
     sl_sklad = {'Sklad-3': 3, 'Sklad-7': 7}
     
-    IME_DATOTEKE_Z_BAZO = conn
-    IME_DATOTEKE_S_PODATKI_1 = r"\ND_00_Seznam klasifikacij po dovoljenjih.xlsx"
-    IME_DATOTEKE_S_PODATKI_2 = r"\001_Evidenca_odpadko_v_skladiscu.xlsm"
-    
-    dat_1 = xlrd.open_workbook(IME_DATOTEKE_S_PODATKI_1)
-    dat_2 = xlrd.open_workbook(IME_DATOTEKE_S_PODATKI_2)
+    dat_1 = xlrd.open_workbook(os.path.join(sys.path[0], "ND_00_Seznam klasifikacij po dovoljenjih.xlsx"))
+    dat_2 = xlrd.open_workbook(os.path.join(sys.path[0], "001_Evidenca_odpadko_v_skladiscu.xlsx"))
 
     list1 = dat_1.sheet_by_index(1)
     sl_klas_st_ime = dict()
@@ -295,7 +283,7 @@ def uvozi_podatke(tabele, conn):
                 st += 1
     
     # napolnimo tabelo podjetje
-    vhod = dat_2.sheet_by_index(4)  # 334 vrstic
+    vhod = dat_1.sheet_by_index(4)  # 334 vrstic
     sl_podatkov = dict()
     povzrocitelj = ''
     for i in range(1, 334):
@@ -321,13 +309,13 @@ def uvozi_podatke(tabele, conn):
                     povzrocitelj = ''
 
             skladisce = sl_sklad[skladisce]
-            leto, mesec, dan, _, _, _ = xlrd.xldate_as_tuple(datum, dat_2.datemode)
+            leto, mesec, dan, _, _, _ = xlrd.xldate_as_tuple(datum, dat_1.datemode)
             sql_datum = '{}-{}-{}'.format(leto, mesec, dan)
 
             # da bomo lahoko dopolnili še v primeru izvoza, ločujemo glede (klas. št., teža), saj se trenutno ne ponavljajo
             sl_podatkov[(klas_st, teza)]  = {'pov': povzrocitelj, 'op_uv': opomba_uvoz, 'skl': skladisce, 'dat_uv': sql_datum}
             
-    izhod = dat_2.sheet_by_index(5)  # 297 vrstic
+    izhod = dat_1.sheet_by_index(5)  # 297 vrstic
     for i in range(1, 297):
         klas_st = izhod.cell_value(i, 0)
         opomba_izvoz = izhod.cell_value(i, 1)
@@ -336,12 +324,12 @@ def uvozi_podatke(tabele, conn):
         # skladisce = izhod.cell_value(i, 4)
         if teza:
             # ni prazna vrstica
-            # spremenimo datum v primerenega za SQL
             if opomba_izvoz in {'x', 'X'}:
                 # ni opombe
                 opomba_izvoz = ''
 
-            leto, mesec, dan, _ ,_, _ = xlrd.xldate_as_tuple(datum_izv, dat_2.datemode)
+            # spremenimo datum v primerenega za SQL
+            leto, mesec, dan, _ ,_, _ = xlrd.xldate_as_tuple(datum_izv, dat_1.datemode)
             sql_datum = '{}-{}-{}'.format(leto, mesec, dan)
             
             if (klas_st, teza) in sl_podatkov.keys():
@@ -363,12 +351,12 @@ def pripravi_tabele(conn):
     '''
         Pripravi objekte za tabele.
     '''
-    # uporabnik = Uporabnik(conn)
+    uporabnik = Uporabnik(conn)
     podjetje = Podjetje(conn)
     vrsta_odpadka = VrstaOdpadka(conn)
     skladisce = Skladisce(conn)
     odpadek = Odpadek(conn)
-    return [podjetje, vrsta_odpadka, skladisce, odpadek]
+    return [uporabnik, podjetje, vrsta_odpadka, skladisce, odpadek]
 
 
 def ustvari_bazo(conn):
