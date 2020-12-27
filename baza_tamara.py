@@ -4,7 +4,7 @@ import xlrd
 import sys
 import openpyxl.reader.excel
 import openpyxl.workbook
-import geslo
+from geslo import sifriraj_geslo
 
 PARAM_FMT = ":{}"
 
@@ -107,7 +107,7 @@ class Uporabnik(Ekol):
                 - poimenovani parametri: vrednosti v ustreznih stolpcih
         '''
         if podatki.get("sol", None) is None and podatki.get("zgostitev", None) is not None:
-            podatki["zgostitev"], podatki["sol"] = geslo.sifriraj_geslo(podatki["zgostitev"])
+            podatki["zgostitev"], podatki["sol"] = sifriraj_geslo(podatki["zgostitev"])
         return super().dodaj_vrstico(**podatki)
 
 
@@ -322,6 +322,7 @@ def uvozi_podatke(tabele, conn):
         teza = izhod.cell_value(i, 2)
         datum_izv = izhod.cell_value(i, 3)
         # skladisce = izhod.cell_value(i, 4)
+
         if teza:
             # ni prazna vrstica
             teza = int(teza)
