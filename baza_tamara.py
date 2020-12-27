@@ -233,22 +233,27 @@ def ustvari_tabele(tabele):
     '''
     for t in tabele:
         t.ustvari()
+    print('tabele ustvarjene ...')  # TEST!!!
 
 
 def izbrisi_tabele(tabele):
     '''
         Izbriši podane tabele.
     '''
+    print('brisem tabele ...')  # TEST!!!
     for t in tabele:
         t.izbrisi()
+    print('tabele izbrisane ...')  # TEST!!!
 
 
 def izprazni_tabele(tabele):
     '''
         Izprazni podane tabele.
     '''
+    print('praznim tabele ...')  # TEST!!!
     for t in tabele:
         t.izprazni()
+    print('tabele so prazne ...')  # TEST!!!
 
 
 def uvozi_podatke(tabele, conn):
@@ -353,6 +358,7 @@ def pripravi_tabele(conn):
     '''
         Pripravi objekte za tabele.
     '''
+    print('pripravi_tabele')  #TEST!!!
     uporabnik = Uporabnik(conn)
     podjetje = Podjetje(conn)
     vrsta_odpadka = VrstaOdpadka(conn)
@@ -365,21 +371,37 @@ def ustvari_bazo(conn):
     '''
         Izvede ustvarjanje baze.
     '''
+    print('ustvari_bazo ...')  #TEST!!!
+    print('ustvarjam tabele ... pripravi_tabele ...')  #TEST!!!
+    
     tabele = pripravi_tabele(conn)
+    
+    print('tabele ustvarjene:', tabele)  #TEST!!!
+    print('brišem tabele ...')   # TEST!!!
+    
     izbrisi_tabele(tabele)
+
+    print('ustvarjam tabele ...')  # TEST!!!
     ustvari_tabele(tabele)
+
+    print('uvažam podatke ...')  # TEST!!!
     uvozi_podatke(tabele, conn)
+
+    print('baza ustvarjena ...')  # TEST!!!
 
 
 def ustvari_bazo_ce_ne_obstaja(conn):
     '''
         Ustvari bazo, če ta še ne obstaja.
     '''
+    print('ustvari_bazo_ce_ne_obstaja ...')  # TEST!!!
     with conn:
+        print('nekaj delam ...')  # TEST!!!
         cur = conn.execute("SELECT COUNT(*) FROM sqlite_master")
         if cur.fetchone() == (0, ):
+            print('kličem: ustvari_bazo ...')  # TEST!!!
             ustvari_bazo(conn)
 
 
-conn = sqlite3.connect('Ekol.sqlite')
+conn = sqlite3.connect(os.path.join(sys.path[0], 'Ekol.sqlite'))
 ustvari_bazo_ce_ne_obstaja(conn)
