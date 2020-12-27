@@ -2,8 +2,8 @@ import os
 import sqlite3
 import xlrd
 import sys
-import openpyxl.workbook
 import openpyxl.reader.excel
+import openpyxl.workbook
 import geslo
 
 PARAM_FMT = ":{}"
@@ -258,11 +258,11 @@ def uvozi_podatke(tabele, conn):
     sl_sklad = {'Sklad-3': 3, 'Sklad-7': 7}
     
     dat_1 = xlrd.open_workbook(os.path.join(sys.path[0], "ND_00_Seznam klasifikacij po dovoljenjih.xlsx"))
-    dat_2 = xlrd.open_workbook(os.path.join(sys.path[0], "001_Evidenca_odpadko_v_skladiscu.xlsx"))
+    dat_2 = xlrd.open_workbook(os.path.join(sys.path[0], "001_Evidenca_odpadko_v_skladiscu.xlsm"))
 
     list1 = dat_1.sheet_by_index(1)
     sl_klas_st_ime = dict()
-    for i in range(1, 840):  # po vrsticah
+    for i in range(1, list1.nrows):  # po vrsticah
         klas_st = list1.cell_value(i, 0)
         ime = list1.cell_value(i, 1)
         sl_klas_st_ime[klas_st] = ime
@@ -272,7 +272,7 @@ def uvozi_podatke(tabele, conn):
     sl_id_podjetje = dict()  # zato da bo id podjetja nekje shranjen
     mn_podatkov = set()
     st = 1
-    for i in range(1, 334):
+    for i in range(1, list3.nrows):
         vred = list3.cell_value(i, 1)
         if vred and vred not in {'x', 'X'}:
             podatek = vred.upper()
@@ -283,21 +283,21 @@ def uvozi_podatke(tabele, conn):
                 st += 1
     
     # napolnimo tabelo podjetje
-    vhod = dat_1.sheet_by_index(4)  # 334 vrstic
+    vhod = dat_2.sheet_by_index(4)  # 334 vrstic
     sl_podatkov = dict()
     povzrocitelj = ''
-    for i in range(1, 334):
+    for i in range(1, vhod.nrows):
         klas_st = vhod.cell_value(i, 0)
         povzrocitelj = vhod.cell_value(i, 1).upper()
         opomba_uvoz = vhod.cell_value(i, 2)
-        teza = int(vhod.cell_value(i, 3))
+        teza = vhod.cell_value(i, 3)
         skladisce = vhod.cell_value(i, 4)
         datum = vhod.cell_value(i, 5)
         
-        if datum and teza != 1:  # teža 1 pomeni napako
+        if datum and teza not in {1, '', 1.0}:  # teža 1 pomeni napako
             # vrstica ni prazna
             # spremenimo datum primeren za SQL
-            
+            teza = int(teza)
             if opomba_uvoz in {'x', 'X'}:
                 opomba_uvoz = ''
             if povzrocitelj in sl_id_podjetje:
@@ -314,16 +314,18 @@ def uvozi_podatke(tabele, conn):
 
             # da bomo lahoko dopolnili še v primeru izvoza, ločujemo glede (klas. št., teža), saj se trenutno ne ponavljajo
             sl_podatkov[(klas_st, teza)]  = {'pov': povzrocitelj, 'op_uv': opomba_uvoz, 'skl': skladisce, 'dat_uv': sql_datum}
-            
-    izhod = dat_1.sheet_by_index(5)  # 297 vrstic
-    for i in range(1, 297):
+
+    izhod = dat_2.sheet_by_index(5)  # 297 vrstic
+    for i in range(1, izhod.nrows):
         klas_st = izhod.cell_value(i, 0)
         opomba_izvoz = izhod.cell_value(i, 1)
-        teza = int(izhod.cell_value(i, 2))
+        teza = izhod.cell_value(i, 2)
         datum_izv = izhod.cell_value(i, 3)
         # skladisce = izhod.cell_value(i, 4)
         if teza:
             # ni prazna vrstica
+            teza = int(teza)
+
             if opomba_izvoz in {'x', 'X'}:
                 # ni opombe
                 opomba_izvoz = ''
@@ -337,7 +339,7 @@ def uvozi_podatke(tabele, conn):
                 sl_podatkov[klas_st, teza]['dat_iz'] = sql_datum
                 sl_podatkov[klas_st, teza]['op_iz'] = opomba_izvoz
 
-    podjetja, vrsta_odpadka, skladisce, odpadek = tabele
+    uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek = tabele
     with conn:
         vrsta_odpadka.uvozi(sl_klas_st_ime)
         podjetja.uvozi(sl_id_podjetje)
@@ -362,8 +364,9 @@ def pripravi_tabele(conn):
 def ustvari_bazo(conn):
     '''
         Izvede ustvarjanje baze.
-    '''
+    '''    
     tabele = pripravi_tabele(conn)
+        
     izbrisi_tabele(tabele)
     ustvari_tabele(tabele)
     uvozi_podatke(tabele, conn)
@@ -379,5 +382,5 @@ def ustvari_bazo_ce_ne_obstaja(conn):
             ustvari_bazo(conn)
 
 
-conn = sqlite3.connect('Ekol.sqlite')
+conn = sqlite3.connect(os.path.join(sys.path[0], 'Ekol.sqlite'))
 ustvari_bazo_ce_ne_obstaja(conn)
