@@ -1,8 +1,8 @@
 import xlrd
 import os
 import sys
-from openpyxl.workbook import Workbook
-from openpyxl.reader.excel import load_workbook, InvalidFileException
+#from openpyxl.workbook import Workbook
+#from openpyxl.reader.excel import load_workbook, InvalidFileException
 
 IME_DATOTEKE_S_PODATKI_1 = os.path.join(sys.path[0], "ND_00_Seznam klasifikacij po dovoljenjih.xlsx")
 IME_DATOTEKE_S_PODATKI_2 = os.path.join(sys.path[0], "001_Evidenca_odpadko_v_skladiscu.xlsm")

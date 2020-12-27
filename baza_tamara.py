@@ -2,8 +2,6 @@ import os
 import sqlite3
 import xlrd
 import sys
-import openpyxl.workbook
-import openpyxl.reader.excel
 import geslo
 
 PARAM_FMT = ":{}"
