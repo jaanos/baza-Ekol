@@ -233,38 +233,32 @@ def ustvari_tabele(tabele):
     '''
     for t in tabele:
         t.ustvari()
-    print('tabele ustvarjene ...')  # TEST!!!
 
 
 def izbrisi_tabele(tabele):
     '''
         Izbriši podane tabele.
     '''
-    print('brisem tabele ...')  # TEST!!!
     for t in tabele:
         t.izbrisi()
-    print('tabele izbrisane ...')  # TEST!!!
 
 
 def izprazni_tabele(tabele):
     '''
         Izprazni podane tabele.
     '''
-    print('praznim tabele ...')  # TEST!!!
     for t in tabele:
         t.izprazni()
-    print('tabele so prazne ...')  # TEST!!!
 
 
 def uvozi_podatke(tabele, conn):
     '''
         Uvozi podatke v podane tabele.
     '''
-    print('uvažam podatke ...')  # TEST!!!
     sl_sklad = {'Sklad-3': 3, 'Sklad-7': 7}
     
     dat_1 = xlrd.open_workbook(os.path.join(sys.path[0], "ND_00_Seznam klasifikacij po dovoljenjih.xlsx"))
-    dat_2 = xlrd.open_workbook(os.path.join(sys.path[0], "001_Evidenca_odpadko_v_skladiscu.xlsx"))
+    dat_2 = xlrd.open_workbook(os.path.join(sys.path[0], "001_Evidenca_odpadko_v_skladiscu.xlsm"))
 
     list1 = dat_1.sheet_by_index(1)
     sl_klas_st_ime = dict()
@@ -296,14 +290,14 @@ def uvozi_podatke(tabele, conn):
         klas_st = vhod.cell_value(i, 0)
         povzrocitelj = vhod.cell_value(i, 1).upper()
         opomba_uvoz = vhod.cell_value(i, 2)
-        teza = int(vhod.cell_value(i, 3))
+        teza = vhod.cell_value(i, 3)
         skladisce = vhod.cell_value(i, 4)
         datum = vhod.cell_value(i, 5)
         
-        if datum and teza != 1:  # teža 1 pomeni napako
+        if datum and teza not in {1, '', 1.0}:  # teža 1 pomeni napako
             # vrstica ni prazna
             # spremenimo datum primeren za SQL
-            
+            teza = int(teza)
             if opomba_uvoz in {'x', 'X'}:
                 opomba_uvoz = ''
             if povzrocitelj in sl_id_podjetje:
@@ -320,17 +314,18 @@ def uvozi_podatke(tabele, conn):
 
             # da bomo lahoko dopolnili še v primeru izvoza, ločujemo glede (klas. št., teža), saj se trenutno ne ponavljajo
             sl_podatkov[(klas_st, teza)]  = {'pov': povzrocitelj, 'op_uv': opomba_uvoz, 'skl': skladisce, 'dat_uv': sql_datum}
-            print(i, '...', (klas_st, teza), '...', sl_podatkov[(klas_st, teza)])  # TEST!!!
 
     izhod = dat_2.sheet_by_index(5)  # 297 vrstic
     for i in range(1, izhod.nrows):
         klas_st = izhod.cell_value(i, 0)
         opomba_izvoz = izhod.cell_value(i, 1)
-        teza = int(izhod.cell_value(i, 2))
+        teza = izhod.cell_value(i, 2)
         datum_izv = izhod.cell_value(i, 3)
         # skladisce = izhod.cell_value(i, 4)
         if teza:
             # ni prazna vrstica
+            teza = int(teza)
+
             if opomba_izvoz in {'x', 'X'}:
                 # ni opombe
                 opomba_izvoz = ''
@@ -344,7 +339,7 @@ def uvozi_podatke(tabele, conn):
                 sl_podatkov[klas_st, teza]['dat_iz'] = sql_datum
                 sl_podatkov[klas_st, teza]['op_iz'] = opomba_izvoz
 
-    podjetja, vrsta_odpadka, skladisce, odpadek = tabele
+    uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek = tabele
     with conn:
         vrsta_odpadka.uvozi(sl_klas_st_ime)
         podjetja.uvozi(sl_id_podjetje)
@@ -358,7 +353,6 @@ def pripravi_tabele(conn):
     '''
         Pripravi objekte za tabele.
     '''
-    print('pripravi_tabele')  #TEST!!!
     uporabnik = Uporabnik(conn)
     podjetje = Podjetje(conn)
     vrsta_odpadka = VrstaOdpadka(conn)
@@ -370,36 +364,21 @@ def pripravi_tabele(conn):
 def ustvari_bazo(conn):
     '''
         Izvede ustvarjanje baze.
-    '''
-    print('ustvari_bazo ...')  #TEST!!!
-    print('ustvarjam tabele ... pripravi_tabele ...')  #TEST!!!
-    
+    '''    
     tabele = pripravi_tabele(conn)
-    
-    print('tabele ustvarjene:', tabele)  #TEST!!!
-    print('brišem tabele ...')   # TEST!!!
-    
+        
     izbrisi_tabele(tabele)
-
-    print('ustvarjam tabele ...')  # TEST!!!
     ustvari_tabele(tabele)
-
-    print('uvažam podatke ...')  # TEST!!!
     uvozi_podatke(tabele, conn)
-
-    print('baza ustvarjena ...')  # TEST!!!
 
 
 def ustvari_bazo_ce_ne_obstaja(conn):
     '''
         Ustvari bazo, če ta še ne obstaja.
     '''
-    print('ustvari_bazo_ce_ne_obstaja ...')  # TEST!!!
     with conn:
-        print('nekaj delam ...')  # TEST!!!
         cur = conn.execute("SELECT COUNT(*) FROM sqlite_master")
         if cur.fetchone() == (0, ):
-            print('kličem: ustvari_bazo ...')  # TEST!!!
             ustvari_bazo(conn)
 
 

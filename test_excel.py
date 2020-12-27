@@ -28,3 +28,6 @@ print(dat_1.sheet_by_index(1).nrows)
 print(dat_1.sheet_by_index(4).nrows)
 print(dat_2.sheet_by_index(4).nrows)
 print(dat_2.sheet_by_index(5).nrows)
+
+dat = xlrd.open_workbook(os.path.join(sys.path[0], "ND_00_Seznam klasifikacij po dovoljenjih.xlsx"))
+print(dat.sheets)
