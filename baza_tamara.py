@@ -2,6 +2,8 @@ import os
 import sqlite3
 import xlrd
 import sys
+import openpyxl.reader.excel
+import openpyxl.workbook
 import geslo
 
 PARAM_FMT = ":{}"
@@ -253,6 +255,7 @@ def uvozi_podatke(tabele, conn):
     '''
         Uvozi podatke v podane tabele.
     '''
+    print('uvažam podatke ...')  # TEST!!!
     sl_sklad = {'Sklad-3': 3, 'Sklad-7': 7}
     
     dat_1 = xlrd.open_workbook(os.path.join(sys.path[0], "ND_00_Seznam klasifikacij po dovoljenjih.xlsx"))
@@ -260,7 +263,7 @@ def uvozi_podatke(tabele, conn):
 
     list1 = dat_1.sheet_by_index(1)
     sl_klas_st_ime = dict()
-    for i in range(1, 840):  # po vrsticah
+    for i in range(1, list1.nrows):  # po vrsticah
         klas_st = list1.cell_value(i, 0)
         ime = list1.cell_value(i, 1)
         sl_klas_st_ime[klas_st] = ime
@@ -270,7 +273,7 @@ def uvozi_podatke(tabele, conn):
     sl_id_podjetje = dict()  # zato da bo id podjetja nekje shranjen
     mn_podatkov = set()
     st = 1
-    for i in range(1, 334):
+    for i in range(1, list3.nrows):
         vred = list3.cell_value(i, 1)
         if vred and vred not in {'x', 'X'}:
             podatek = vred.upper()
@@ -281,10 +284,10 @@ def uvozi_podatke(tabele, conn):
                 st += 1
     
     # napolnimo tabelo podjetje
-    vhod = dat_1.sheet_by_index(4)  # 334 vrstic
+    vhod = dat_2.sheet_by_index(4)  # 334 vrstic
     sl_podatkov = dict()
     povzrocitelj = ''
-    for i in range(1, 334):
+    for i in range(1, vhod.nrows):
         klas_st = vhod.cell_value(i, 0)
         povzrocitelj = vhod.cell_value(i, 1).upper()
         opomba_uvoz = vhod.cell_value(i, 2)
@@ -312,9 +315,10 @@ def uvozi_podatke(tabele, conn):
 
             # da bomo lahoko dopolnili še v primeru izvoza, ločujemo glede (klas. št., teža), saj se trenutno ne ponavljajo
             sl_podatkov[(klas_st, teza)]  = {'pov': povzrocitelj, 'op_uv': opomba_uvoz, 'skl': skladisce, 'dat_uv': sql_datum}
-            
-    izhod = dat_1.sheet_by_index(5)  # 297 vrstic
-    for i in range(1, 297):
+            print(i, '...', (klas_st, teza), '...', sl_podatkov[(klas_st, teza)])  # TEST!!!
+
+    izhod = dat_2.sheet_by_index(5)  # 297 vrstic
+    for i in range(1, izhod.nrows):
         klas_st = izhod.cell_value(i, 0)
         opomba_izvoz = izhod.cell_value(i, 1)
         teza = int(izhod.cell_value(i, 2))
