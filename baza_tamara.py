@@ -1,9 +1,10 @@
 import os
 import sqlite3
-import xlrd
-import sys
-import openpyxl.reader.excel
-import openpyxl.workbook
+import json
+# import xlrd
+# import sys
+# import openpyxl.reader.excel
+# import openpyxl.workbook
 from geslo import sifriraj_geslo
 
 PARAM_FMT = ":{}"
@@ -255,97 +256,124 @@ def uvozi_podatke(tabele, conn):
     '''
         Uvozi podatke v podane tabele.
     '''
-    sl_sklad = {'Sklad-3': 3, 'Sklad-7': 7}
-    
-    dat_1 = xlrd.open_workbook(os.path.join(sys.path[0], "ND_00_Seznam klasifikacij po dovoljenjih.xlsx"))
-    dat_2 = xlrd.open_workbook(os.path.join(sys.path[0], "001_Evidenca_odpadko_v_skladiscu.xlsm"))
-
-    list1 = dat_1.sheet_by_index(1)
-    sl_klas_st_ime = dict()
-    for i in range(1, list1.nrows):  # po vrsticah
-        klas_st = list1.cell_value(i, 0)
-        ime = list1.cell_value(i, 1)
-        sl_klas_st_ime[klas_st] = ime
-
-    # napolnimo tabelo podjetje
-    list3 = dat_2.sheet_by_index(4)
-    sl_id_podjetje = dict()  # zato da bo id podjetja nekje shranjen
-    mn_podatkov = set()
-    st = 1
-    for i in range(1, list3.nrows):
-        vred = list3.cell_value(i, 1)
-        if vred and vred not in {'x', 'X'}:
-            podatek = vred.upper()
-            if podatek not in mn_podatkov:
-                # z velikimi črkami zaradi neusklajenosti pisanja v excellu
-                mn_podatkov.add(podatek)
-                sl_id_podjetje[podatek] = st
-                st += 1
-    
-    # napolnimo tabelo podjetje
-    vhod = dat_2.sheet_by_index(4)  # 334 vrstic
-    sl_podatkov = dict()
-    povzrocitelj = ''
-    for i in range(1, vhod.nrows):
-        klas_st = vhod.cell_value(i, 0)
-        povzrocitelj = vhod.cell_value(i, 1).upper()
-        opomba_uvoz = vhod.cell_value(i, 2)
-        teza = vhod.cell_value(i, 3)
-        skladisce = vhod.cell_value(i, 4)
-        datum = vhod.cell_value(i, 5)
-        
-        if datum and teza not in {1, '', 1.0}:  # teža 1 pomeni napako
-            # vrstica ni prazna
-            # spremenimo datum primeren za SQL
-            teza = int(teza)
-            if opomba_uvoz in {'x', 'X'}:
-                opomba_uvoz = ''
-            if povzrocitelj in sl_id_podjetje:
-                povzrocitelj = sl_id_podjetje[povzrocitelj]
-            else:
-                # nov povzročitelj
-                if povzrocitelj in {'x', 'X'}:
-                    # neznan povzročitelj
-                    povzrocitelj = ''
-
-            skladisce = sl_sklad[skladisce]
-            leto, mesec, dan, _, _, _ = xlrd.xldate_as_tuple(datum, dat_1.datemode)
-            sql_datum = '{}-{}-{}'.format(leto, mesec, dan)
-
-            # da bomo lahoko dopolnili še v primeru izvoza, ločujemo glede (klas. št., teža), saj se trenutno ne ponavljajo
-            sl_podatkov[(klas_st, teza)]  = {'pov': povzrocitelj, 'op_uv': opomba_uvoz, 'skl': skladisce, 'dat_uv': sql_datum}
-
-    izhod = dat_2.sheet_by_index(5)  # 297 vrstic
-    for i in range(1, izhod.nrows):
-        klas_st = izhod.cell_value(i, 0)
-        opomba_izvoz = izhod.cell_value(i, 1)
-        teza = izhod.cell_value(i, 2)
-        datum_izv = izhod.cell_value(i, 3)
-        # skladisce = izhod.cell_value(i, 4)
-
-        if teza:
-            # ni prazna vrstica
-            teza = int(teza)
-
-            if opomba_izvoz in {'x', 'X'}:
-                # ni opombe
-                opomba_izvoz = ''
-
-            # spremenimo datum v primerenega za SQL
-            leto, mesec, dan, _ ,_, _ = xlrd.xldate_as_tuple(datum_izv, dat_1.datemode)
-            sql_datum = '{}-{}-{}'.format(leto, mesec, dan)
-            
-            if (klas_st, teza) in sl_podatkov.keys():
-                # ta podatek je bil  res uvožen
-                sl_podatkov[klas_st, teza]['dat_iz'] = sql_datum
-                sl_podatkov[klas_st, teza]['op_iz'] = opomba_izvoz
+#    sl_sklad = {'Sklad-3': 3, 'Sklad-7': 7}
+#    
+#    dat_1 = xlrd.open_workbook(os.path.join(sys.path[0], "ND_00_Seznam klasifikacij po dovoljenjih.xlsx"))
+#    dat_2 = xlrd.open_workbook(os.path.join(sys.path[0], "001_Evidenca_odpadko_v_skladiscu.xlsm"))
+#
+#    list1 = dat_1.sheet_by_index(1)
+#    sl_klas_st_ime = dict()
+#    for i in range(1, list1.nrows):  # po vrsticah
+#        klas_st = list1.cell_value(i, 0)
+#        ime = list1.cell_value(i, 1)
+#        sl_klas_st_ime[klas_st] = ime
+#
+#    # napolnimo tabelo podjetje
+#    list3 = dat_2.sheet_by_index(4)
+#    sl_id_podjetje = dict()  # zato da bo id podjetja nekje shranjen
+#    mn_podatkov = set()
+#    st = 1
+#    for i in range(1, list3.nrows):
+#        vred = list3.cell_value(i, 1)
+#        if vred and vred not in {'x', 'X'}:
+#            podatek = vred.upper()
+#            if podatek not in mn_podatkov:
+#                # z velikimi črkami zaradi neusklajenosti pisanja v excellu
+#                mn_podatkov.add(podatek)
+#                sl_id_podjetje[podatek] = st
+#                st += 1
+#    
+#    # napolnimo tabelo podjetje
+#    vhod = dat_2.sheet_by_index(4)  # 334 vrstic
+#    sl_podatkov = dict()
+#    povzrocitelj = ''
+#    for i in range(1, vhod.nrows):
+#        klas_st = vhod.cell_value(i, 0)
+#        povzrocitelj = vhod.cell_value(i, 1).upper()
+#        opomba_uvoz = vhod.cell_value(i, 2)
+#        teza = vhod.cell_value(i, 3)
+#        skladisce = vhod.cell_value(i, 4)
+#        datum = vhod.cell_value(i, 5)
+#        
+#        if datum and teza not in {1, '', 1.0}:  # teža 1 pomeni napako
+#            # vrstica ni prazna
+#            # spremenimo datum primeren za SQL
+#            teza = int(teza)
+#            if opomba_uvoz in {'x', 'X'}:
+#                opomba_uvoz = ''
+#            if povzrocitelj in sl_id_podjetje:
+#                povzrocitelj = sl_id_podjetje[povzrocitelj]
+#            else:
+#                # nov povzročitelj
+#                if povzrocitelj in {'x', 'X'}:
+#                    # neznan povzročitelj
+#                    povzrocitelj = ''
+#
+#            skladisce = sl_sklad[skladisce]
+#            leto, mesec, dan, _, _, _ = xlrd.xldate_as_tuple(datum, dat_1.datemode)
+#            sql_datum = '{}-{}-{}'.format(leto, mesec, dan)
+#
+#            # da bomo lahoko dopolnili še v primeru izvoza, ločujemo glede (klas. št., teža), saj se trenutno ne ponavljajo
+#            sl_podatkov[(klas_st, teza)]  = {'pov': povzrocitelj, 'op_uv': opomba_uvoz, 'skl': skladisce, 'dat_uv': sql_datum}
+#
+#    izhod = dat_2.sheet_by_index(5)  # 297 vrstic
+#    for i in range(1, izhod.nrows):
+#        klas_st = izhod.cell_value(i, 0)
+#        opomba_izvoz = izhod.cell_value(i, 1)
+#        teza = izhod.cell_value(i, 2)
+#        datum_izv = izhod.cell_value(i, 3)
+#        # skladisce = izhod.cell_value(i, 4)
+#
+#        if teza:
+#            # ni prazna vrstica
+#            teza = int(teza)
+#
+#            if opomba_izvoz in {'x', 'X'}:
+#                # ni opombe
+#                opomba_izvoz = ''
+#
+#            # spremenimo datum v primerenega za SQL
+#            leto, mesec, dan, _ ,_, _ = xlrd.xldate_as_tuple(datum_izv, dat_1.datemode)
+#            sql_datum = '{}-{}-{}'.format(leto, mesec, dan)
+#            
+#            if (klas_st, teza) in sl_podatkov.keys():
+#                # ta podatek je bil  res uvožen
+#                sl_podatkov[klas_st, teza]['dat_iz'] = sql_datum
+#                sl_podatkov[klas_st, teza]['op_iz'] = opomba_izvoz
+#
+#    uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek = tabele
+#    with conn:
+#        vrsta_odpadka.uvozi(sl_klas_st_ime)
+#        podjetja.uvozi(sl_id_podjetje)
+#        skladisce.uvozi(sl_sklad)
+#        odpadek.uvozi(sl_podatkov)
+#
+#    conn.execute('VACUUM')
+    with open('podatki.json', encoding='utf-8') as podatki:
+        data = json.load(podatki)
+    slo_sklad = data['slo_sklad']
+    slo_id_podjetje = data['slo_id_podjetje']
+    slo_klas_ste_ime = data['slo_klas_ste_ime']
+    vmesni = data['sez_podatkov']
+    slo_odpadki = dict()
+    for sez in vmesni.values():
+        slo_odpadki[sez[0], sez[1]] = {
+                                        sez[2][0]: sez[2][1],
+                                        sez[3][0]: sez[3][1],
+                                        sez[4][0]: sez[4][1],
+                                        sez[5][0]: sez[5][1]
+        }
 
     uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek = tabele
     with conn:
-        vrsta_odpadka.uvozi(sl_klas_st_ime)
-        podjetja.uvozi(sl_id_podjetje)
-        skladisce.uvozi(sl_sklad)
-        odpadek.uvozi(sl_podatkov)
+
+        vrsta_odpadka.uvozi(slo_klas_ste_ime)
+
+        podjetja.uvozi(slo_id_podjetje)
+
+        skladisce.uvozi(slo_sklad)
+
+        odpadek.uvozi(slo_odpadki)
 
     conn.execute('VACUUM')
 
@@ -383,5 +411,6 @@ def ustvari_bazo_ce_ne_obstaja(conn):
             ustvari_bazo(conn)
 
 
-conn = sqlite3.connect(os.path.join(sys.path[0], 'Ekol.sqlite'))
+# conn = sqlite3.connect(os.path.join(sys.path[0], 'Ekol.sqlite'))
+conn = sqlite3.connect('Ekol.sqlite')
 ustvari_bazo_ce_ne_obstaja(conn)

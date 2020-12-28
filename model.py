@@ -1,12 +1,12 @@
-import baza
+from baza import *
 import sqlite3
 from geslo import sifriraj_geslo, preveri_geslo
 
 conn = sqlite3.connect('Ekol.sqlite')
-baza.ustvari_bazo_ce_ne_obstaja(conn)
+ustvari_bazo_ce_ne_obstaja(conn)
 conn.execute('PRAGMA foreign_keys = ON')
 
-uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek = baza.pripravi_tabele(conn)
+uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek = pripravi_tabele(conn)
 
 
 class LoginError(Exception):
@@ -16,7 +16,7 @@ class LoginError(Exception):
     pass
 
 
-class Uporabnik:
+class Uporabnik(Ekol):
     """
     Razred za uporabnika.
     """
@@ -63,12 +63,16 @@ class Uporabnik:
 
 
 
-class Podjetja:
+class Podjetja(Ekol):
     def __init__(self, ime, id = None):
         self.id = id
         self.ime = ime
+   
+   
     def __str__(self):
         return self.ime
+   
+   
     def dodaj_v_bazo(self):
         assert self.id is None
         with conn:
@@ -76,45 +80,80 @@ class Podjetja:
             self.id = id
 
 
-class VrstaOdpadka:
+class VrstaOdpadka(Ekol):
     def __init__(self, klasifikacijska_stevilka, naziv):
         self.klasifikacijska_stevilka = klasifikacijska_stevilka
         self.naziv = naziv
+    
+    
     def __str__(self):
         return self.naziv
+    
+    
     def dodaj_v_bazo(self):
         with conn:
             vrsta_odpadka.dodaj_vrstico(klasifikacijska_stevilka=self.klasifikacijska_stevilka, naziv=self.naziv)
 
-class Skladisce:
+
+class Skladisce(Ekol):
     def __init__(self, id, ime):
         self.id = id
         self.ime = ime
+    
+    
     def __str__(self):
         return self.ime
+    
+    
     def dodaj_v_bazo(self):
         with conn:
             skladisce.dodaj_vrstico(ime=self.ime, id=self.id)
 
-class Odpadek:
-    def __init__(self, id, teza, povzrocitelj, klasifikacijska_stevilka, skladisce, datum_uvoza, opomba_uvoza=None, datum_izvoza=None, opomba_izvoza=None, prejemnik=None):
-        self.id = id
+
+class Odpadek(Ekol):
+    def __init__(self, teza, povzrocitelj, klasifikacijska_stevilka, skladisce,
+     datum_uvoza, opomba_uvoza=None, datum_izvoza=None, opomba_izvoza=None, prejemnik=None):
         self.teza = teza
         self.povzrocitelj = povzrocitelj
         self.klasifikacijska_stevilka = klasifikacijska_stevilka
         self.skladisce = skladisce
-        self.datumm_uvoza = datum_uvoza
-        self.opomba_uvoza = opomba_uvoza
+        self.datum_uvoza = datum_uvoza
+        # naslednji so lahko None
+        if opomba_uvoza != None:
+            self.opomba_uvoza = opomba_uvoza
         self.datum_izvoza = datum_izvoza
         self.opomba_izvoza = opomba_izvoza
         self.prejemnik = prejemnik
-    def dodaj_v_bazo(self, teza, povzrocitelj, klasifikacijska_stevilka, skladisce, datum_uvoza):
-        slo = dict()
-        slo['pov'] = povzrocitelj
-        slo['pre'] = self.prejemnik
-        slo['dat_uv'] = datumm_uvoza
-        slo['op_uv'] = self.opomba_uvoza
-        slo['dat_iz'] = self.datum_izvoza
-        slo['op_iz'] = self.opomba_izvoza
-        slo['skl'] = skladisce
-        odpadek.dodaj_vrstico(klasifikacijska_stevilka, teza, slo)
+    
+    
+    def dodaj_vrstico(self, /, **podatki):
+        '''
+            Metoda za dodajanje vrstice.
+            Argumenti:
+                - poimenovani parametri: vrednosti v ustreznih stolpcih
+        '''
+        podatki = {kljuc: vrednost for kljuc, vrednost in podatki.items() if vrednost is not None}
+        poizvedba = self.dodajanje(podatki.keys())
+        cur = conn.execute(poizvedba, podatki)
+        return cur.lastrowid
+
+
+    def dodaj_v_bazo(self):
+        sl = dict()
+        sl['klasifikacijska_stevilka'] = self.klasifikacijska_stevilka
+        sl['teza'] = self.teza 
+        sl['datum_uvoza'] = self.datum_uvoza
+        sl['opomba_uvoza'] = self.opomba_uvoza
+        sl['datum_izvoza'] = self.datum_izvoza
+        sl['opomba_izvoza'] = self.opomba_izvoza
+        
+        # skladišče je vnešeno kot št. {3, 7}
+        sl['skladisce'] = skladisce
+
+        # potrebujemo index
+        sl['povzrocitelj'] = conn.execute("""
+                SELECT id FROM podjetje
+                WHERE ime = ?;
+            """, [self.povzrocitelj]).fetchone()
+
+        self.dodaj_vrstico(**sl)
