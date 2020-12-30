@@ -44,14 +44,14 @@ for i in range(1, 334):
         # pomeni ni prazna vrstica
         # spremenimo datum primeren za SQL
         if opomba_uvoz == 'x':
-            opomba_uvoz = ''
+            opomba_uvoz = None
         if povzrocitelj.upper() in slo_id_podjetje.keys():
             povzrocitelj = slo_id_podjetje[povzrocitelj.upper()]
         else:
             if povzrocitelj not in {'x', 'X'}:
-                povzrocitelj = povzrocitelj.upper()
+                    povzrocitelj = povzrocitelj.upper()
             else:
-                povzrocitelj = ''
+                povzrocitelj = None
         if sklad in slo_sklad.keys():
             sklad = slo_sklad[sklad]
         leto, mesec, dan, h, i, s = xlrd.xldate_as_tuple(datum, dat.datemode)
@@ -71,7 +71,7 @@ for i in range(1, 297):
         # pomeni ni prazna vrstica
         # spremenimo datum primeren za SQL
         if opomba_izvoz == 'x':
-            opomba_izvoz = ''
+            opomba_izvoz = None
         povzrocitelj = povzrocitelj.upper()
         leto1, mesec1, dan1, h, i, s = xlrd.xldate_as_tuple(datum_izv, dat.datemode)
         sql_datum1 = str(leto1) + '-' + str(mesec1) + '-' + str(dan1)

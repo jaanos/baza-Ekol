@@ -192,8 +192,7 @@ class Odpadek(Ekol):
                 CREATE TABLE odpadek (
                     id                       INTEGER     PRIMARY KEY AUTOINCREMENT,
                     teza                     INTEGER     NOT NULL,
-                    povzrocitelj             INTEGER     NOT NULL
-                                                        REFERENCES podjetje (id),
+                    povzrocitelj             INTEGER     REFERENCES podjetje (id),
                     prejemnik                INTEGER     REFERENCES podjetje (id),-- če ni obvezen podatek, brez NOT NULL
                     datum_uvoza              DATE        NOT NULL,
                     opomba_uvoz              TEXT,
@@ -210,14 +209,17 @@ class Odpadek(Ekol):
             nov = dict()
             nov['klasifikacijska_stevilka'] = kl
             nov['teza'] = teza
-            nov['prejemnik'] = ''
-            nov['povzrocitelj'] = sl.get('pov', '')
-            nov['opomba_uvoz'] = sl.get('op_uv', '')
-            nov['skladisce'] = sl.get('skl', '')
-            nov['datum_uvoza'] = sl.get('dat_uv', '')
-            nov['datum_izvoza'] = sl.get('dat_iz', '')
-            nov['opomba_izvoz'] = sl.get('op_iz', '')
+            nov['prejemnik'] = None
+            nov['povzrocitelj'] = sl.get('pov')
+            nov['opomba_uvoz'] = sl.get('op_uv')
+            nov['skladisce'] = sl.get('skl')
+            nov['datum_uvoza'] = sl.get('dat_uv')
+            nov['datum_izvoza'] = sl.get('dat_iz')
+            nov['opomba_izvoz'] = sl.get('op_iz')
             self.dodaj_vrstico(**nov)
+
+    
+
     
 
 # ---------------------------------------------------------------------------------------------------------------------------

@@ -111,49 +111,79 @@ class Skladisce(Ekol):
 
 
 class Odpadek(Ekol):
-    def __init__(self, teza, povzrocitelj, klasifikacijska_stevilka, skladisce,
-     datum_uvoza, opomba_uvoza=None, datum_izvoza=None, opomba_izvoza=None, prejemnik=None):
+    def __init__(self, teza, klasifikacijska_stevilka, skladisce,
+     datum_uvoza, povzrocitelj = None, opomba_uvoz=None):
         self.teza = teza
-        self.povzrocitelj = povzrocitelj
+        if povzrocitelj:
+            self.povzrocitelj = povzrocitelj.upper()
+        else:
+            self.povzrocitelj = None
         self.klasifikacijska_stevilka = klasifikacijska_stevilka
         self.skladisce = skladisce
         self.datum_uvoza = datum_uvoza
-        # naslednji so lahko None
-        if opomba_uvoza != None:
-            self.opomba_uvoza = opomba_uvoza
-        self.datum_izvoza = datum_izvoza
-        self.opomba_izvoza = opomba_izvoza
-        self.prejemnik = prejemnik
+        self.opomba_uvoz = opomba_uvoz
+        
+        # teh pri dodajanju ni -> se jih dodeli kasneje ob predelavi    
+        self.datum_izvoza = None
+        self.opomba_izvoza = None
+        self.prejemnik = None
     
-    
-    def dodaj_vrstico(self, /, **podatki):
-        '''
-            Metoda za dodajanje vrstice.
-            Argumenti:
-                - poimenovani parametri: vrednosti v ustreznih stolpcih
-        '''
-        podatki = {kljuc: vrednost for kljuc, vrednost in podatki.items() if vrednost is not None}
-        poizvedba = self.dodajanje(podatki.keys())
-        cur = conn.execute(poizvedba, podatki)
-        return cur.lastrowid
-
 
     def dodaj_v_bazo(self):
         sl = dict()
         sl['klasifikacijska_stevilka'] = self.klasifikacijska_stevilka
         sl['teza'] = self.teza 
         sl['datum_uvoza'] = self.datum_uvoza
-        sl['opomba_uvoza'] = self.opomba_uvoza
-        sl['datum_izvoza'] = self.datum_izvoza
-        sl['opomba_izvoza'] = self.opomba_izvoza
-        
+        sl['opomba_uvoz'] = self.opomba_uvoz       
         # skladišče je vnešeno kot št. {3, 7}
-        sl['skladisce'] = skladisce
+        sl['skladisce'] = self.skladisce
 
         # potrebujemo index
-        sl['povzrocitelj'] = conn.execute("""
-                SELECT id FROM podjetje
-                WHERE ime = ?;
-            """, [self.povzrocitelj]).fetchone()
+        if self.povzrocitelj:
+            sl['povzrocitelj'] = conn.execute("""
+                    SELECT id FROM podjetje
+                    WHERE ime = ?;
+                """, [self.povzrocitelj]).fetchone()[0]
+        with conn:
+            odpadek.dodaj_vrstico(**sl)
 
-        self.dodaj_vrstico(**sl)
+
+    def izvozi(self, datum_izvoza, opomba_izvoz=None, prejemnik=None):
+        self.datum_izvoza = datum_izvoza
+        self.opomba_izvoz = opomba_izvoz
+        self.prejemnik = prejemnik
+        sl = dict()
+        if self.prejemnik:
+            sl['prejemnik'] = conn.execute("""
+                    SELECT id FROM podjetje
+                    WHERE ime = ?;
+                """, [self.prejemnik]).fetchone()[0]
+        else:
+            sl['prejemnik'] = None
+        sl['datum_izvoza'] = datum_izvoza
+        sl['opomba_izvoz'] = opomba_izvoz
+    
+        id = conn.execute("""
+                    SELECT id FROM odpadek
+                    WHERE
+                    teza = ? AND
+                    datum_uvoza = ? AND
+                    opomba_uvoz = ? AND
+                    klasifikacijska_stevilka = ? AND
+                    skladisce = ?
+                """, [self.teza,
+                    self.datum_uvoza,
+                    self.opomba_uvoz,
+                    self.klasifikacijska_stevilka,
+                    self.skladisce]).fetchone()[0]
+        with conn:
+            odpadek.execute('''
+                UPDATE odpadek SET 
+                prejemnik = ?, 
+                datum_izvoza = ?, 
+                opomba_izvoz = ?
+                WHERE id = ?;''',
+                [id,
+                sl['prejemnik'],
+                sl['datum_izvoza'],
+                sl['opomba_izvoz']])
