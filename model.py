@@ -144,6 +144,8 @@ class Odpadek(Ekol):
                     SELECT id FROM podjetje
                     WHERE ime = ?;
                 """, [self.povzrocitelj]).fetchone()[0]
+        else:
+            sl['povzrocitelj']  = None
         with conn:
             odpadek.dodaj_vrstico(**sl)
 
@@ -157,7 +159,7 @@ class Odpadek(Ekol):
             sl['prejemnik'] = conn.execute("""
                     SELECT id FROM podjetje
                     WHERE ime = ?;
-                """, [self.prejemnik]).fetchone()[0]
+                """, [self.prejemnik.upper()]).fetchone()[0]
         else:
             sl['prejemnik'] = None
         sl['datum_izvoza'] = datum_izvoza
@@ -177,13 +179,4 @@ class Odpadek(Ekol):
                     self.klasifikacijska_stevilka,
                     self.skladisce]).fetchone()[0]
         with conn:
-            odpadek.execute('''
-                UPDATE odpadek SET 
-                prejemnik = ?, 
-                datum_izvoza = ?, 
-                opomba_izvoz = ?
-                WHERE id = ?;''',
-                [id,
-                sl['prejemnik'],
-                sl['datum_izvoza'],
-                sl['opomba_izvoz']])
+            odpadek.za_izvoz(id, sl)

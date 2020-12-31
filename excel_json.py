@@ -48,10 +48,7 @@ for i in range(1, 334):
         if povzrocitelj.upper() in slo_id_podjetje.keys():
             povzrocitelj = slo_id_podjetje[povzrocitelj.upper()]
         else:
-            if povzrocitelj not in {'x', 'X'}:
-                    povzrocitelj = povzrocitelj.upper()
-            else:
-                povzrocitelj = None
+            povzrocitelj = None
         if sklad in slo_sklad.keys():
             sklad = slo_sklad[sklad]
         leto, mesec, dan, h, i, s = xlrd.xldate_as_tuple(datum, dat.datemode)

@@ -218,6 +218,19 @@ class Odpadek(Ekol):
             nov['opomba_izvoz'] = sl.get('op_iz')
             self.dodaj_vrstico(**nov)
 
+
+    def za_izvoz(self, id, sl):
+        self.conn.execute('''
+            UPDATE odpadek
+                SET prejemnik = ?,
+                    datum_izvoza = ?,
+                    opomba_izvoz = ?
+                WHERE id = ?;''',
+            [
+            sl['prejemnik'],
+            sl['datum_izvoza'],
+            sl['opomba_izvoz'],
+            id])
     
 
     
