@@ -6,7 +6,7 @@ conn = sqlite3.connect('Ekol.sqlite')
 ustvari_bazo_ce_ne_obstaja(conn)
 conn.execute('PRAGMA foreign_keys = ON')
 
-uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek = pripravi_tabele(conn)
+uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek, opomba = pripravi_tabele(conn)
 
 
 class LoginError(Exception):
@@ -79,6 +79,22 @@ class Podjetja(Ekol):
             id = podjetja.dodaj_vrstico(ime=self.ime)
             self.id = id
 
+
+class Opomba(Ekol):
+    def __init__(self, ime, id = None):
+        self.id = id
+        self.ime = ime
+   
+   
+    def __str__(self):
+        return self.ime
+   
+   
+    def dodaj_v_bazo(self):
+        assert self.id is None
+        with conn:
+            id = opomba.dodaj_vrstico(ime=self.ime)
+            self.id = id
 
 class VrstaOdpadka(Ekol):
     def __init__(self, klasifikacijska_stevilka, naziv):

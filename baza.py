@@ -143,6 +143,42 @@ class Podjetje(Ekol):
             self.dodaj_vrstico(**nov)
 
 # ---------------------------------------------------------------------------------------------------------
+class Opomba(Ekol):
+    ime = 'opomba'
+    
+
+    def ustvari(self):
+        self.conn.execute('''
+                CREATE TABLE opomba (
+                id  INTEGER PRIMARY KEY AUTOINCREMENT,
+                ime TEXT    NOT NULL
+            );''')
+
+
+    def dodaj_vrstico(self, /, **podatki):
+        '''
+            Če opombe še ni v bazi, jo doda.
+        '''
+        opomba = self.conn.execute("""
+            SELECT id FROM opomba
+            WHERE ime = :ime;
+        """, podatki).fetchone()
+
+        if opomba is None:
+            # to podjetje je novo
+            return super().dodaj_vrstico(**podatki)
+        else:
+            id, = opomba
+            return id
+
+
+    def uvozi(self, slo_opombe):
+        for opomba in slo_opombe:
+            nov = dict()
+            nov['ime'] = opomba
+            self.dodaj_vrstico(**nov)
+
+# ---------------------------------------------------------------------------------------------------------
 class VrstaOdpadka(Ekol):
     ime = 'vrsta_odpadka'
     # podatki = {klasifikacijska_stevilka: kl_stevilka, naziv: ime}
@@ -195,9 +231,9 @@ class Odpadek(Ekol):
                     povzrocitelj             INTEGER     REFERENCES podjetje (id),
                     prejemnik                INTEGER     REFERENCES podjetje (id),-- če ni obvezen podatek, brez NOT NULL
                     datum_uvoza              DATE        NOT NULL,
-                    opomba_uvoz              TEXT,
+                    opomba_uvoz              INTEGER     DEFAULT "Drugo" REFERENCES opomba (id),
                     datum_izvoza             DATE,
-                    opomba_izvoz             TEXT,
+                    opomba_izvoz             INTEGER     REFERENCES opomba (id),
                     klasifikacijska_stevilka VARCHAR (9) NOT NULL
                                                          REFERENCES vrsta_odpadka (klasifikacijska_stevilka),
                     skladisce                INTEGER     REFERENCES skladisce (id) 
@@ -206,17 +242,9 @@ class Odpadek(Ekol):
     
     def uvozi(self, sez_podatkov):
         for (kl, teza), sl in sez_podatkov.items():
-            nov = dict()
-            nov['klasifikacijska_stevilka'] = kl
-            nov['teza'] = teza
-            nov['prejemnik'] = None
-            nov['povzrocitelj'] = sl.get('pov')
-            nov['opomba_uvoz'] = sl.get('op_uv')
-            nov['skladisce'] = sl.get('skl')
-            nov['datum_uvoza'] = sl.get('dat_uv')
-            nov['datum_izvoza'] = sl.get('dat_iz')
-            nov['opomba_izvoz'] = sl.get('op_iz')
-            self.dodaj_vrstico(**nov)
+            sl['klasifikacijska_stevilka'] = kl
+            sl['teza'] = teza
+            self.dodaj_vrstico(**sl)
 
 
     def za_izvoz(self, id, sl):
@@ -270,6 +298,7 @@ def uvozi_podatke(tabele, conn):
     slo_sklad = data['slo_sklad']
     slo_id_podjetje = data['slo_id_podjetje']
     slo_klas_ste_ime = data['slo_klas_ste_ime']
+    slo_opombe = data['slo_opombe']
     vmesni = data['sez_podatkov']
     slo_odpadki = dict()
     for sez in vmesni.values():
@@ -280,7 +309,7 @@ def uvozi_podatke(tabele, conn):
                                         sez[5][0]: sez[5][1]
         }
 
-    uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek = tabele
+    uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek, opomba = tabele
     with conn:
 
         vrsta_odpadka.uvozi(slo_klas_ste_ime)
@@ -290,6 +319,8 @@ def uvozi_podatke(tabele, conn):
         skladisce.uvozi(slo_sklad)
 
         odpadek.uvozi(slo_odpadki)
+
+        opomba.uvozi(slo_opombe)
 
     conn.execute('VACUUM')
 
@@ -303,7 +334,8 @@ def pripravi_tabele(conn):
     vrsta_odpadka = VrstaOdpadka(conn)
     skladisce = Skladisce(conn)
     odpadek = Odpadek(conn)
-    return [uporabnik, podjetje, vrsta_odpadka, skladisce, odpadek]
+    opomba = Opomba(conn)
+    return [uporabnik, podjetje, vrsta_odpadka, skladisce, odpadek, opomba]
 
 
 def ustvari_bazo(conn):
