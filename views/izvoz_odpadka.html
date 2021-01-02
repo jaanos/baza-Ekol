@@ -1,0 +1,86 @@
+<!--
+	spletna stran za uvoz odpadka
+-->
+
+% rebase('osnova.tpl')
+		
+			<section id="main" class="wrapper">
+				<div class="inner">
+					<div class="content">
+
+					<!-- Elements -->
+						<div class="row">
+							<div>
+
+								<!-- Text -->
+									<h2>Izvoz odpadka</h2>
+
+									<p>Odpadke lahko bodisi odstranite, bodisi predelate. V vsakem primeru morate trenutni
+									skladiščeni odpadek odstraniti. Za uspešno odstranitev odpadka morate poleg podatkov o
+									odpadku nujno podati ustrezen datum izvedbe dejanja.</p>
+
+									<h4>Podatki o odpadku:</h4>
+
+									<!-- Podatki o odpadku -->
+									<form method="POST" action="/podatki_o_odpadku_izvoz", name="podatki_o_odpadku_izvoz">
+										<div class="row gtr-uniform">
+											<div>
+												
+												<div class="col-3 col-12-small">
+													<dl class="actions">
+														<dt> <input type="int" name="teza" id="teza" value="" placeholder="Teža [kg]" class="primary"/> <br>
+														</dt>
+														<dt> <input type="text" name="klasifikacijska_stevilka" id="klasifikacijska_stevilka" value="" placeholder="Klasifikacijska številka" class="primary"/>
+														</dt>
+														<dt> <input type="date" name="datum_uvoza" id="datum_uvoza" value="" placeholder="Datum uvoza" class="primary"/>
+														</dt>
+														<dt> <select name="skladisce" id="skladisce" class="primary">
+														<option value="">- Skladišče -</option>
+														<option value="3">Skladišče 3</option>
+														<option value="7">Skladišče 7</option>
+														</select>
+														</dt>
+														<h4>Podatki o odstranjevanju:</h4>
+														<dt> <input type="date" name="datum_izvoza" id="datum_izvoza" value="" placeholder="Datum izvoza" class="primary"/>
+														</dt>
+														<dt><input type="text" name="prejemnik" id="prejemnik" value="" placeholder="Prejemnik" /> 
+														</dt>
+														<dt> <select name="opomba_izvoza" id="opomba_izvoza" />
+														<option value="">- Opomba -</option>
+														<option value="Elan">Elan</option>
+														<option value="HDPE">HDPE</option>
+														<option value="HERZ">HERZ</option>
+														<option value="Sauber">Sauber</option>
+														<option value="mletje">mletje</option>
+														<option value="sveče">sveče</option>
+														<option value="EKO-1">EKO-1</option>
+														<option value="EKO-2">EKO-2</option>
+														<option value="ZOKI-1">ZOKI-1</option>
+														<option value="odcejeno">odcejeno</option>
+														<option value="napaka">napaka</option>
+														<option value="ostalo">ostalo</option>
+														</select>			
+														</dt>
+														<dt><input type="submit" value="Odstrani" class="primary" onclick="odstrani()"/><dt>
+														
+
+														<script>
+														function odstrani() {
+														  alert("Odpadek je bil uspešno odstranjen!");
+														}
+														</script>
+
+
+													</dl>
+													</div>
+												</ul>
+											</div>
+										</div>
+									</form>
+
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>

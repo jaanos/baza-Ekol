@@ -1,0 +1,83 @@
+<!--
+	spletna stran za uvoz odpadka
+-->
+
+% rebase('osnova.tpl')
+		
+			<section id="main" class="wrapper">
+				<div class="inner">
+					<div class="content">
+
+					<!-- Elements -->
+						<div class="row">
+							<div>
+
+								<!-- Text -->
+									<h2>Uvoz odpadka</h2>
+
+									<p>Za uvoz odpadka izpolnite spodnji obrazec. Ne pozabite, 
+									da so za uspešen uvoz odpadka nekateri podatki zahtevani (tj. teža, datum uvoza, klasifikacijska številka).</p>
+
+									<h4>Podatki o odpadku:</h4>
+
+								<!-- Podatki o odpadku -->
+									<form method="POST" action="/podatki_o_odpadku", name="podatki_o_odpadku_odvoz">
+										<div class="row gtr-uniform">
+											<div>
+												
+												<div class="col-3 col-12-small">
+													<dl class="actions">
+														
+														<dt> <input type="int" name="teza" id="teza" value="" placeholder="Teža [kg]" class="primary"/> <br>
+														</dt>
+														<dt><input type="text" name="povzrocitelj" id="povzrocitelj" value="" placeholder="Povzročitelj" /> 
+														</dt>
+														<dt> <input type="date" name="datum_uvoza" id="datum_uvoza" value="" placeholder="Datum uvoza" class="primary"/>
+														</dt>
+														<dt> <input type="text" name="klasifikacijska_stevilka" id="klasifikacijska_stevilka" value="" placeholder="Klasifikacijska številka" class="primary"/>
+														</dt>
+														<dt> <select name="skladisce" id="skladisce" class="primary">
+														<option value="">- Skladišče -</option>
+														<option value="3">Skladišče 3</option>
+														<option value="7">Skladišče 7</option>
+														</select>
+														</dt>
+														<dt> <select name="opomba_uvoza" id="opomba_uvoza" />
+														<option value="">- Opomba -</option>
+														<option value="Elan">Elan</option>
+														<option value="HDPE">HDPE</option>
+														<option value="HERZ">HERZ</option>
+														<option value="Sauber">Sauber</option>
+														<option value="mletje">mletje</option>
+														<option value="sveče">sveče</option>
+														<option value="EKO-1">EKO-1</option>
+														<option value="EKO-2">EKO-2</option>
+														<option value="ZOKI-1">ZOKI-1</option>
+														<option value="odcejeno">odcejeno</option>
+														<option value="napaka">napaka</option>
+														<option value="ostalo">ostalo</option>
+														</select>			
+														</dt>
+														<dt><input type="submit" value="Uvozi" class="primary" onclick="dodaj()"/><dt>
+														
+
+														<script>
+														function dodaj() {
+														  alert("Odpadek je bil uspešno uvožen!");
+														}
+														</script>
+
+
+													</dl>
+													</div>
+												</ul>
+											</div>
+										</div>
+									</form>
+
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
