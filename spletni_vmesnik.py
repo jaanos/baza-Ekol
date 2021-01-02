@@ -150,8 +150,8 @@ def izvozi_odpadek():
     odpadek = Odpadek(teza, klasifikacijska_stevilka, skladisce,
      datum_uvoza)
     
-    #odpadek.izvozi(datum_izvoza, opomba_izvoza, prejemnik)
-    print(odpadek)
+    odpadek.izvozi(datum_izvoza, opomba_izvoza, prejemnik)
+
     return template('zacetna_stran.html')
 
 
