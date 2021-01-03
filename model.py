@@ -137,6 +137,30 @@ class Skladisce(Ekol):
             id]).fetchone()
         return koliko[0]
 
+    @staticmethod
+    def st_kl_skladisce(skladisce):
+        sql = '''SELECT klasifikacijska_stevilka,
+                        COUNT(klasifikacijska_stevilka) 
+                    FROM odpadek
+                    WHERE skladisce = ?
+                    GROUP BY klasifikacijska_stevilka;
+                    '''
+        for kl, st in conn.execute(sql, [skladisce]):
+            print((f'V skladišči {skladisce} je {kl} {st} kosov.'))
+            # zato da vidim da dela izpišem, za vmesnik bova potrebovala yield pomoje
+            #yield (f'V skladišči {skladisce} je {kl} {st} kosov.')
+
+
+    @staticmethod
+    def vsi_odpadki_skladisce(skladisce, *podatki):
+        if not podatki:
+            poizvedba = '''SELECT * FROM odpadek 
+                        WHERE skladisce = ?;'''
+        else:
+            poizvedba = '''SELECT {} FROM odpadek 
+                        WHERE skladisce = ?;''' .format(", ".join(podatki))
+        for vrstica in conn.execute(poizvedba, [skladisce]):
+            print((vrstica))
 
 class Odpadek(Ekol):
     def __init__(self, teza, klasifikacijska_stevilka, skladisce,
