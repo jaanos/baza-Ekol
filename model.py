@@ -186,12 +186,10 @@ class Odpadek(Ekol):
                     WHERE
                     teza = ? AND
                     datum_uvoza = ? AND
-                    opomba_uvoz = ? AND
                     klasifikacijska_stevilka = ? AND
                     skladisce = ?
                 """, [self.teza,
                     self.datum_uvoza,
-                    self.opomba_uvoz,
                     self.klasifikacijska_stevilka,
                     self.skladisce]).fetchone()[0]
         with conn:
