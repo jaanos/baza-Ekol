@@ -132,7 +132,7 @@ class Skladisce(Ekol):
             SELECT SUM(teza) 
                 FROM odpadek
                 WHERE skladisce = ? AND
-                datum_izvoza LIKE NULL;''',
+                datum_izvoza IS NULL;''',
             [
             id]).fetchone()
         return koliko[0]
