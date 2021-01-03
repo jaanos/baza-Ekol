@@ -76,7 +76,7 @@ for i in range(1, 297):
     if teza:
         # pomeni ni prazna vrstica
         # spremenimo datum primeren za SQL
-        if opomba_izvoz == 'x'or opomba_izvoz == 'NAPAKA':
+        if opomba_izvoz == 'x':
             opomba_izvoz = None
         if opomba_izvoz:
             # če je vsaj kakšen podatek še
@@ -90,6 +90,13 @@ for i in range(1, 297):
         if (kl_st, teza) in sez_podatkov.keys():
             sez_podatkov[kl_st, teza]['datum_izvoza'] = sql_datum1
             sez_podatkov[kl_st, teza]['opomba_izvoz'] = slo_opombe.get(opomba_izvoz)
+slo_opombe['HDPE'] = stevec_opombe
+stevec_opombe += 1
+slo_opombe['EKO-2'] = stevec_opombe
+stevec_opombe += 1
+slo_opombe['ZOKI-1'] = stevec_opombe
+stevec_opombe += 1
+slo_opombe['OSTALO'] = stevec_opombe
 skup_slo = {'slo_klas_ste_ime': slo_klas_ste_ime, 
             'slo_id_podjetje': slo_id_podjetje,
             'slo_sklad': slo_sklad,

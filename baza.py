@@ -231,7 +231,7 @@ class Odpadek(Ekol):
                     povzrocitelj             INTEGER     REFERENCES podjetje (id),
                     prejemnik                INTEGER     REFERENCES podjetje (id),-- če ni obvezen podatek, brez NOT NULL
                     datum_uvoza              DATE        NOT NULL,
-                    opomba_uvoz              INTEGER     DEFAULT "Drugo" REFERENCES opomba (id),
+                    opomba_uvoz              INTEGER     REFERENCES opomba (id),
                     datum_izvoza             DATE,
                     opomba_izvoz             INTEGER     REFERENCES opomba (id),
                     klasifikacijska_stevilka VARCHAR (9) NOT NULL
