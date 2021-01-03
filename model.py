@@ -112,7 +112,7 @@ class VrstaOdpadka(Ekol):
 
 
 class Skladisce(Ekol):
-    def __init__(self, id, ime):
+    def __init__(self, id, ime=None):
         self.id = id
         self.ime = ime
     
@@ -124,6 +124,18 @@ class Skladisce(Ekol):
     def dodaj_v_bazo(self):
         with conn:
             skladisce.dodaj_vrstico(ime=self.ime, id=self.id)
+
+
+    @staticmethod
+    def teza(id):
+        koliko = conn.execute('''
+            SELECT SUM(teza) 
+                FROM odpadek
+                WHERE skladisce = ? AND
+                datum_izvoza LIKE NULL;''',
+            [
+            id]).fetchone()
+        return koliko[0]
 
 
 class Odpadek(Ekol):
