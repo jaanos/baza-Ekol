@@ -7,7 +7,7 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<meta name="description" content="Osnovna stran skladišča Ekol" />
-		<meta name="author" content="datamate">
+		<meta name="author" content="Tamara Pogačar, Matej Čušin">
 		<meta name="keywords" content="Ekol" />
 		
 		<link rel="stylesheet" href='../static/assets/css/main.css'/>
@@ -17,7 +17,7 @@
 
 		<!-- Header -->
 			<header id="header">
-				<a class="logo" href="domov">Ekol</a>
+				<a class="logo" href="/">Ekol</a>
 				<nav>
 					<a href="#menu">Meni</a>
 				</nav>
@@ -26,7 +26,7 @@
 		<!-- Nav -->
 			<nav id="menu">
 				<ul class="links">
-					<li><a href="domov">Domov</a></li>
+					<li><a href="/">Domov</a></li>
 					<li><a href="uvoz_odpadka">Uvoz odpadka</a></li>
 					<li><a href="izvoz_odpadka">Izvoz odpadka</a></li>
 				</ul>
