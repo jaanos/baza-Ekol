@@ -79,6 +79,14 @@ class Podjetja(Ekol):
             id = podjetja.dodaj_vrstico(ime=self.ime)
             self.id = id
 
+    @staticmethod
+    def ime_podjetja(index):
+        '''
+            vrne ime podjetja, ki mu pripada dani index
+        '''
+        return conn.execute(''' SELECT ime FROM podjetje
+                            WEHERE id = ?;''', (id)).fetchone()
+
 
 class Opomba(Ekol):
     def __init__(self, ime, id = None):
@@ -139,29 +147,100 @@ class Skladisce(Ekol):
 
     @staticmethod
     def st_kl_skladisce(skladisce):
-        sql = '''SELECT klasifikacijska_stevilka,
-                        COUNT(klasifikacijska_stevilka) 
+        sql = '''SELECT vrsta_odpadka.naziv,
+                        odpadek.klasifikacijska_stevilka,
+                        COUNT(odpadek.klasifikacijska_stevilka) 
                     FROM odpadek
-                    WHERE skladisce = ? AND
-                    datum_izvoza IS NULL
-                    GROUP BY klasifikacijska_stevilka;
+                        JOIN
+                        vrsta_odpadka ON odpadek.klasifikacijska_stevilka = vrsta_odpadka.klasifikacijska_stevilka
+                    WHERE skladisce = ? AND 
+                        datum_izvoza IS NULL
+                    GROUP BY odpadek.klasifikacijska_stevilka;
                     '''
-        for kl, st in conn.execute(sql, [skladisce]):
-            print((f'V skladišči {skladisce} je {kl} {st} kosov.'))
+        for ime, kl, st in conn.execute(sql, [skladisce]):
+            print(f'V skladišči {skladisce} je {ime}({kl}) {st} kosov.')
             # zato da vidim da dela izpišem, za vmesnik bova potrebovala yield pomoje
-            #yield (f'V skladišči {skladisce} je {kl} {st} kosov.')
+            #yield (f'V skladišči {skladisce} je {ime}({kl}) {st} kosov.')
 
 
     @staticmethod
-    def vsi_odpadki_skladisce(skladisce, *podatki):
-        if not podatki:
-            poizvedba = '''SELECT * FROM odpadek 
-                        WHERE skladisce = ?;'''
+    def skladisce_kl_st_uvoz_stolpci(skladisce, kl, *stolpci):
+        '''
+            v *stolpaci so lahko absolutno poimenova stolpci, brez argumentov se uporablja:
+            odpadek.id,
+            odpadek.klasifikacijska_stevilka,
+            odpadek.teza,
+            vrsta_odpadka.naziv,
+            opomba.ime,
+            skladisce.ime,
+            podjetje.ime,
+            odpadek.datum_uvoza
+        '''
+        if not stolpci:
+            poizvedba = '''SELECT   odpadek.id,
+                                    odpadek.klasifikacijska_stevilka,
+                                    vrsta_odpadka.naziv,
+                                    odpadek.teza,
+                                    opomba.ime,
+                                    skladisce.ime,
+                                    podjetje.ime,
+                                    odpadek.datum_uvoza
+                                FROM odpadek
+                                    JOIN
+                                    vrsta_odpadka ON odpadek.klasifikacijska_stevilka = vrsta_odpadka.klasifikacijska_stevilka
+                                    LEFT JOIN
+                                    opomba ON odpadek.opomba_uvoz = opomba.id
+                                    JOIN
+                                    skladisce ON odpadek.skladisce = skladisce.id
+                                    LEFT JOIN
+                                    podjetje ON odpadek.povzrocitelj = podjetje.id
+                                WHERE 
+                                    odpadek.skladisce = ? AND 
+                                    odpadek.klasifikacijska_stevilka = ? AND 
+                                    odpadek.datum_izvoza IS NULL;'''
         else:
-            poizvedba = '''SELECT {} FROM odpadek 
-                        WHERE skladisce = ?;''' .format(", ".join(podatki))
-        for vrstica in conn.execute(poizvedba, [skladisce]):
+            poizvedba = '''SELECT {} 
+                            FROM odpadek
+                                    JOIN
+                                    vrsta_odpadka ON odpadek.klasifikacijska_stevilka = vrsta_odpadka.klasifikacijska_stevilka
+                                    LEFT JOIN
+                                    opomba ON odpadek.opomba_uvoz = opomba.id
+                                    JOIN
+                                    skladisce ON odpadek.skladisce = skladisce.id
+                                    LEFT JOIN
+                                    podjetje ON odpadek.povzrocitelj = podjetje.id
+                                WHERE 
+                                    odpadek.skladisce = ? AND 
+                                    odpadek.klasifikacijska_stevilka = ? AND 
+                                    odpadek.datum_izvoza IS NULL;''' .format(", ".join(stolpci))
+        for vrstica in conn.execute(poizvedba, [skladisce, kl]):
             print((vrstica))
+
+
+    @staticmethod
+    def skladisce_splosno_stolpci(*stolpci):
+        '''
+            v *stolpaci so lahko absolutno poimenova stolpci, brez argumentov se uporablja:
+            odpadek.id,
+            odpadek.klasifikacijska_stevilka,
+            vrsta_odpadka.naziv,
+            odpadek.teza,
+            opomba.ime,
+            skladisce.ime,
+            podjetje.ime,
+            odpadek.datum_uvoza
+        '''
+        if not stolpci:
+            poizvedba = '''SELECT   *
+                                FROM odpadek
+                                ;'''
+        else:
+            poizvedba = '''SELECT {} 
+                            FROM odpadek
+                                ;''' .format(", ".join(stolpci))
+        for vrstica in conn.execute(poizvedba):
+            print((vrstica))
+
 
 class Odpadek(Ekol):
     def __init__(self, teza, klasifikacijska_stevilka, skladisce,
