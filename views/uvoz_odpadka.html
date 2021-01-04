@@ -43,7 +43,7 @@
 														</select>
 														</dt>
 														<dt> <select name="opomba_uvoza" id="opomba_uvoza" />
-														<option value=None>- Opomba -</option>
+														<option value="">- Opomba -</option>
 														<option value="Elan">Elan</option>
 														<option value="HDPE">HDPE</option>
 														<option value="HERZ">HERZ</option>
@@ -58,16 +58,8 @@
 														<option value="ostalo">ostalo</option>
 														</select>			
 														</dt>
-														<dt><input type="submit" name="Uvozi" value="Uvozi" class="primary" onclick="dodaj()"/><dt>
+														<dt><input type="submit" value="Uvozi" class="primary" onclick="if (!confirm('Ali res želite uvoziti odpadek?')) return false;;"/><dt>
 														
-
-														<script>
-														function dodaj() {
-														  confirm("Ali res želite uvoziti odpadek: ...");
-														}
-														</script>
-
-
 													</dl>
 													</div>
 												</ul>

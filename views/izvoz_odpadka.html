@@ -61,16 +61,8 @@
 														<option value="ostalo">ostalo</option>
 														</select>			
 														</dt>
-														<dt><input type="submit" value="Odstrani" class="primary" onclick="odstrani()"/><dt>
+														<dt><input type="submit" value="Odstrani" class="primary" onclick="if (!confirm('Ali res želite izvoziti odpadek?')) return false;;"/><dt>
 														
-
-														<script>
-														function odstrani() {
-														  alert("Odpadek je bil uspešno odstranjen!");
-														}
-														</script>
-
-
 													</dl>
 													</div>
 												</ul>

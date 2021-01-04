@@ -2,6 +2,7 @@ from model import *
 import sqlite3
 import os
 from bottle import *
+from selenium import *
 
 
 app = default_app()
@@ -84,26 +85,27 @@ def podatki_o_odpadku():
 
 @route('/podatki_o_odpadku', method='POST')
 def dodaj_odpadek():
-    uvozi = request.forms.get('Uvozi')
-    if uvozi:
-        teza = request.forms.get('teza')
-        povzrocitelj = request.forms.get('povzrocitelj')
-        datum_uvoza = request.forms.get('datum_uvoza')
-        klasifikacijska_stevilka = request.forms.get('klasifikacijska_stevilka')
-        skladisce = request.forms.get('skladisce')
-        opomba_uvoza = request.forms.get('opomba_uvoza')
+    teza = request.forms.get('teza')
+    povzrocitelj = request.forms.get('povzrocitelj')
+    datum_uvoza = request.forms.get('datum_uvoza')
+    klasifikacijska_stevilka = request.forms.get('klasifikacijska_stevilka')
+    skladisce = request.forms.get('skladisce')
+    opomba_uvoza = request.forms.get('opomba_uvoza')   
 
-        if opomba_uvoza == 'None':
-            opomba_uvoza = None
-        if povzrocitelj == '':
-            povzrocitelj = None
-
-        odpadek = Odpadek(teza, klasifikacijska_stevilka, skladisce,
-         datum_uvoza, povzrocitelj, opomba_uvoza)
-
-        odpadek.dodaj_v_bazo()
-
-    return template('zacetna_stran.html')
+    if opomba_uvoza == '':
+        opomba_uvoza = None
+    if povzrocitelj == '':
+        povzrocitelj = None
+    
+    if teza == '' or datum_uvoza == '' or klasifikacijska_stevilka == '' or skladisce == '':
+        return '''<script>alert("Neustrezni vnos! Prosimo, poskusite ponovno.");</script>''', template('uvoz_odpadka.html')
+    
+    odpadek = Odpadek(teza, klasifikacijska_stevilka, skladisce,
+     datum_uvoza, povzrocitelj, opomba_uvoza)
+    
+    odpadek.dodaj_v_bazo()
+    
+    return '''<script>alert("Odpadek je uvožen.");</script>''', template('zacetna_stran.html')
 
 
 # ODVOZ ODPADKA -----------------------------------------------------------------------------------------
@@ -152,19 +154,23 @@ def izvozi_odpadek():
     prejemnik = request.forms.get('prejemnik')
     opomba_izvoza = request.forms.get('opomba_izvoza')
     
-    if opomba_izvoza == 'None':
+    if opomba_izvoza == '':
         opomba_izvoza = None
     if prejemnik == '':
         prejemnik = None
 
-    odpadek = Odpadek(teza, klasifikacijska_stevilka, skladisce,
-     datum_uvoza)
+    if datum_izvoza == '' or teza == '' or datum_uvoza == '' or klasifikacijska_stevilka == '' or skladisce == '':
+        return '''<script>alert("Neustrezni vnos! Prosimo, poskusite ponovno.");</script>''', template('izvoz_odpadka.html')
     
-    odpadek.izvozi(datum_izvoza, opomba_izvoza, prejemnik)
+    try:
+        odpadek = Odpadek(teza, klasifikacijska_stevilka, skladisce,
+         datum_uvoza)
 
-    return template('zacetna_stran.html')
+        odpadek.izvozi(datum_izvoza, opomba_izvoza, prejemnik)
+        return '''<script>alert("Odpadek je izvožen.");</script>''', template('zacetna_stran.html')
 
-
+    except:
+        return '''<script>alert("Izbranega odpadka ni na skladišču. Poskusi znova!");</script>''', template('izvoz_odpadka.html')
 
 
 
