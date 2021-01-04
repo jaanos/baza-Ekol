@@ -89,7 +89,7 @@ def dodaj_odpadek():
     klasifikacijska_stevilka = request.forms.get('klasifikacijska_stevilka')
     skladisce = request.forms.get('skladisce')
     opomba_uvoza = request.forms.get('opomba_uvoza')   
-
+    print(opomba)
     if opomba_uvoza == '':
         opomba_uvoza = None
     if povzrocitelj == '':
@@ -177,6 +177,30 @@ def pregled():
     return template('pregled.html')
 
 
+# @route('/izbira_dejavnosti')
+# def izbira_dejavnosti():
+#     return '''
+#         <form action="/izbira_dejavnosti" method="post">
+#             <select value="dejavnost" type="text" />
+#             <input value="dejavnost" type="submit" />
+#         </form>
+#     '''
+
+# @route('/izbira_dejavnosti', method='POST')
+# @route('/uvoz_odpadka')
+# @route('/odvoz_odpadka')
+# @route('/pregled')
+# def izberi():
+#     dejavnost = request.forms.get('dejavnost')
+#     if dejavnost == 'uvoz':
+#         # return "<p>Preusmerjam ...</p>"
+#         return template('uvoz_odpadka.html')
+#     elif dejavnost == 'izvoz':
+#         return template('izvoz_odpadka.html')
+#     elif dejavnost == 'pregled':
+#         return template('pregled.html')
+#     else:  # dejavnost == ''
+#         return "<p>Neveljavna izbira!</p>"
 
 
 # -----------------------------------------------------------------------------------------------------
