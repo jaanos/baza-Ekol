@@ -142,7 +142,8 @@ class Skladisce(Ekol):
         sql = '''SELECT klasifikacijska_stevilka,
                         COUNT(klasifikacijska_stevilka) 
                     FROM odpadek
-                    WHERE skladisce = ?
+                    WHERE skladisce = ? AND
+                    datum_izvoza IS NULL
                     GROUP BY klasifikacijska_stevilka;
                     '''
         for kl, st in conn.execute(sql, [skladisce]):

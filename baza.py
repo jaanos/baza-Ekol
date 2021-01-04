@@ -309,7 +309,9 @@ def uvozi_podatke(tabele, conn):
                                         sez[2][0]: sez[2][1],
                                         sez[3][0]: sez[3][1],
                                         sez[4][0]: sez[4][1],
-                                        sez[5][0]: sez[5][1]
+                                        sez[5][0]: sez[5][1],
+                                        sez[6][0]: sez[6][1],
+                                        sez[7][0]: sez[7][1]
         }
 
     uporabnik, podjetja, vrsta_odpadka, skladisce, odpadek, opomba = tabele

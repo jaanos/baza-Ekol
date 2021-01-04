@@ -63,7 +63,7 @@ for i in range(1, 334):
         sql_datum = str(leto) + '-' + str(mesec) + '-' + str(dan)
         teza = int(teza)
         sez_podatkov[(kl_st, teza)]  = {'povzrocitelj': povzrocitelj, 'opomba_uvoz': slo_opombe.get(opomba_uvoz), 
-                                    'skladisce': sklad, 'datum_uvoza': sql_datum}
+                                    'skladisce': sklad, 'datum_uvoza': sql_datum, 'datum_izvoza': None, 'opomba_izvoz': None}
         # zato da bomo dopolnili še v primeru izvoza, ti ločujemo glede kl. številke in težo saj se trenutno ne ponavlje
 izhod = dat.sheet_by_index(5)
 # 297 vrstic
