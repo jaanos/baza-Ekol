@@ -1,0 +1,56 @@
+<!--
+	zacetna stran spletnega vmesnika
+-->
+
+% rebase('osnova.tpl')
+		
+			<section id="main" class="wrapper">
+				<div class="inner">
+					<div class="content">
+
+					<!-- Elements -->
+						<div class="row">
+							<div>
+
+								<!-- Text -->
+									<h2>Pregled skladiščenih odpadkov</h2>
+
+									<p>Ker potrebujete pregled nad skladiščenimi odpadki, si lahko na tem mestu ogledate,
+                                    kakšno je stanje v skladiščih podjetja Ekol.</p>
+
+									<h4>Kaj vas zanima danes?</h4>
+
+
+
+								<!-- IZBIRA DEJAVNOSTI -->
+
+									<form method="POST" action="/filtriraj" name="filtriraj")>
+										<div class="row gtr-uniform">
+
+											<div>
+												<div class="col-12">
+													<ul class="actions">
+													<li><select name="dejavnost" id="dejavnost">
+														<option value="">- Izberi -</option>
+														<option value="uvoz">Količina posameznih odpadkov (gleded na klas. št.)</option>
+														<option value="izvoz">Skupna teža posameznih odpadkov v nekem skladišču</option>
+														<option value="pregled">Vsi odpadki v skladišču</option>
+                                                        <option value="pregled">Zadnji izvoz za posamezno klas. št. odpadka</option>
+													</select>
+													</li>
+
+													<li><input type="submit" value="Pojdi" class="primary" /></li>
+												</ul>
+											</div>
+											</div>
+
+											</div>
+									</form>
+
+
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>

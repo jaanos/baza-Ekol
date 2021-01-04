@@ -29,6 +29,7 @@
 					<li><a href="/">Domov</a></li>
 					<li><a href="uvoz_odpadka">Uvoz odpadka</a></li>
 					<li><a href="izvoz_odpadka">Izvoz odpadka</a></li>
+					<li><a href="pregled">Pregled skladiščenih odpadkov</a></li>
 				</ul>
 			</nav>
 

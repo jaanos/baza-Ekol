@@ -2,8 +2,6 @@ from model import *
 import sqlite3
 import os
 from bottle import *
-from selenium import *
-
 
 app = default_app()
 
@@ -173,11 +171,10 @@ def izvozi_odpadek():
         return '''<script>alert("Izbranega odpadka ni na skladišču. Poskusi znova!");</script>''', template('izvoz_odpadka.html')
 
 
-
-
-
 # PREGLED SKLADIŠČENIH ODPADKOV --------------------------------------------------------------------------
-
+@get('/pregled')
+def pregled():
+    return template('pregled.html')
 
 
 
