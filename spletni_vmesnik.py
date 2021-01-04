@@ -19,8 +19,6 @@ def server_static(filename):
 # ZAČETNA STRAN -----------------------------------------------------------------------------------------
 @route('')
 @route('/')
-@route('/domov')
-@get('/zacetna_stran')
 def zacetna_stran():
     return template('zacetna_stran.html')
 
@@ -86,17 +84,24 @@ def podatki_o_odpadku():
 
 @route('/podatki_o_odpadku', method='POST')
 def dodaj_odpadek():
-    teza = request.forms.get('teza')
-    povzrocitelj = request.forms.get('povzrocitelj')
-    datum_uvoza = request.forms.get('datum_uvoza')
-    klasifikacijska_stevilka = request.forms.get('klasifikacijska_stevilka')
-    skladisce = request.forms.get('skladisce')
-    opomba_uvoza = request.forms.get('opomba_uvoza')
-    
-    odpadek = Odpadek(teza, klasifikacijska_stevilka, skladisce,
-     datum_uvoza, povzrocitelj, opomba_uvoza)
-    
-    odpadek.dodaj_v_bazo()
+    uvozi = request.forms.get('Uvozi')
+    if uvozi:
+        teza = request.forms.get('teza')
+        povzrocitelj = request.forms.get('povzrocitelj')
+        datum_uvoza = request.forms.get('datum_uvoza')
+        klasifikacijska_stevilka = request.forms.get('klasifikacijska_stevilka')
+        skladisce = request.forms.get('skladisce')
+        opomba_uvoza = request.forms.get('opomba_uvoza')
+
+        if opomba_uvoza == 'None':
+            opomba_uvoza = None
+        if povzrocitelj == '':
+            povzrocitelj = None
+
+        odpadek = Odpadek(teza, klasifikacijska_stevilka, skladisce,
+         datum_uvoza, povzrocitelj, opomba_uvoza)
+
+        odpadek.dodaj_v_bazo()
 
     return template('zacetna_stran.html')
 
@@ -147,6 +152,11 @@ def izvozi_odpadek():
     prejemnik = request.forms.get('prejemnik')
     opomba_izvoza = request.forms.get('opomba_izvoza')
     
+    if opomba_izvoza == 'None':
+        opomba_izvoza = None
+    if prejemnik == '':
+        prejemnik = None
+
     odpadek = Odpadek(teza, klasifikacijska_stevilka, skladisce,
      datum_uvoza)
     
