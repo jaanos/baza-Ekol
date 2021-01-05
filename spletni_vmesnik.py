@@ -38,14 +38,13 @@ def izbira_dejavnosti():
 def izberi():
     dejavnost = request.forms.get('dejavnost')
     if dejavnost == 'uvoz':
-        # return "<p>Preusmerjam ...</p>"
         return template('uvoz_odpadka.html')
     elif dejavnost == 'izvoz':
         return template('izvoz_odpadka.html')
     elif dejavnost == 'pregled':
         return template('pregled.html')
     else:  # dejavnost == ''
-        return "<p>Neveljavna izbira!</p>"
+        return '''<script>alert("Neveljavna izvira! Prosimo, poskusite ponovno.");</script>''', template('zacetna_stran.html')
 
 
 # UVOZ ODPADKA ------------------------------------------------------------------------------------------
@@ -89,7 +88,7 @@ def dodaj_odpadek():
     klasifikacijska_stevilka = request.forms.get('klasifikacijska_stevilka')
     skladisce = request.forms.get('skladisce')
     opomba_uvoza = request.forms.get('opomba_uvoza')   
-
+    
     if opomba_uvoza == '':
         opomba_uvoza = None
     if povzrocitelj == '':
@@ -108,7 +107,7 @@ def dodaj_odpadek():
 
 # ODVOZ ODPADKA -----------------------------------------------------------------------------------------
 @get('/izvoz_odpadka')
-def odvoz_odpadka():
+def izvoz_odpadka():
     return template('izvoz_odpadka.html')
 
 
@@ -175,6 +174,58 @@ def izvozi_odpadek():
 @get('/pregled')
 def pregled():
     return template('pregled.html')
+
+
+@route('/filtriraj')
+def filtriraj():
+    return '''
+        <form action="/filtriraj" method="post">
+            <select value="pregled" type="text" />
+            <input value="pregled" type="submit" />
+        </form>
+    '''
+
+@route('/filtriraj', method='POST')
+@route('/kolicina')
+@route('/skupna_teza')
+@route('/vsi')
+@route('/zadnji')
+def filtriraj_odpadke():
+    dejavnost = request.forms.get('pregled')
+    if dejavnost == 'kolicina':
+        return template('kolicina.html')
+    elif dejavnost == 'skupna_teza':
+        return template('skupna_teza.html')
+    elif dejavnost == 'vsi':
+        return template('vsi.html')
+    elif dejavnost == 'zadnji':
+        return template('zadnji.html')
+    else:  # dejavnost == ''
+        return '''<script>alert("Neveljavna izvira! Prosimo, poskusite ponovno.");</script>''', template('pregled.html')
+
+
+# KOLIČINA POSAMEZNIH ODPADKOV (GLEDE NA KLAS. ŠT.) ------------------------------------------------------------------------------
+@get('/kolicina')
+def kolicina_odpadkov():
+    return template('kolicina.html')
+
+
+# SKUPNA TEŽA POSAMEZNIH ODPADKOV V NEKEM SKLADIŠČU -------------------------------------------------------------------------------
+@get('/skupna_teza')
+def skupna_teza_odpadkov():
+    return template('skupna_teza.html')
+
+
+# VSI ODPADKI V SKLADIŠČU ---------------------------------------------------------------------------------------------------------
+@get('/vsi')
+def vsi_odpadki():
+    return template('vsi.html')
+
+
+# ZADNJI IZVOZ ZA POSAMEZNO KLAS. ŠT. ODPADKA -------------------------------------------------------------------------------------
+@get('/zadnji')
+def zadnji_odpadki():
+    return template('zadnji.html')
 
 
 

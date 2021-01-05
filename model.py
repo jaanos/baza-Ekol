@@ -217,29 +217,51 @@ class Skladisce(Ekol):
             print((vrstica))
 
 
+    
     @staticmethod
     def skladisce_splosno_stolpci(*stolpci):
-        '''
-            v *stolpaci so lahko absolutno poimenova stolpci, brez argumentov se uporablja:
-            odpadek.id,
-            odpadek.klasifikacijska_stevilka,
-            vrsta_odpadka.naziv,
-            odpadek.teza,
-            opomba.ime,
-            skladisce.ime,
-            podjetje.ime,
-            odpadek.datum_uvoza
-        '''
         if not stolpci:
-            poizvedba = '''SELECT   *
+            poizvedba = '''
+                            SELECT odpadek.id,
+                                    odpadek.teza,
+                                    odpadek.klasifikacijska_stevilka,
+                                    vrsta_odpadka.naziv,
+                                    opomba.ime,
+                                    opomba_izvoza.ime,
+                                    skladisce.ime,
+                                    podjetje.ime,
+                                    prejemnik.ime,
+                                    odpadek.datum_uvoza,
+                                    odpadek.datum_izvoza
                                 FROM odpadek
-                                ;'''
+                                    LEFT JOIN
+                                    vrsta_odpadka ON odpadek.klasifikacijska_stevilka = vrsta_odpadka.klasifikacijska_stevilka
+                                    LEFT JOIN
+                                    opomba ON odpadek.opomba_uvoz = opomba.id
+                                    LEFT JOIN
+                                    opomba AS opomba_izvoza ON odpadek.opomba_izvoz = opomba_izvoza.id
+                                    LEFT JOIN
+                                    skladisce ON odpadek.skladisce = skladisce.id
+                                    LEFT JOIN
+                                    podjetje ON odpadek.povzrocitelj = podjetje.id
+                                    LEFT JOIN
+                                    podjetje AS prejemnik ON odpadek.prejemnik = prejemnik.id;
+                                '''
         else:
             poizvedba = '''SELECT {} 
                             FROM odpadek
-                                ;''' .format(", ".join(stolpci))
+                                LEFT JOIN
+                                vrsta_odpadka ON odpadek.klasifikacijska_stevilka = vrsta_odpadka.klasifikacijska_stevilka
+                                LEFT JOIN
+                                opomba ON odpadek.opomba_uvoz = opomba.id
+                                LEFT JOIN
+                                skladisce ON odpadek.skladisce = skladisce.id
+                                LEFT JOIN
+                                podjetje ON odpadek.povzrocitelj = podjetje.id;
+                                ''' .format(", ".join(stolpci))
         for vrstica in conn.execute(poizvedba):
             print((vrstica))
+
 
 
 class Odpadek(Ekol):
