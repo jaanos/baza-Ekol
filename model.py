@@ -317,10 +317,14 @@ class Odpadek(Ekol):
 
         # potrebujemo index
         if self.povzrocitelj:
-            sl['povzrocitelj'] = conn.execute("""
-                    SELECT id FROM podjetje
-                    WHERE ime = ?;
-                """, [self.povzrocitelj]).fetchone()[0]
+            try:
+                sl['povzrocitelj'] = conn.execute("""
+                        SELECT id FROM podjetje
+                        WHERE ime = ?;
+                    """, [self.povzrocitelj]).fetchone()[0]
+            except:
+                with conn:
+                    sl['povzrocitelj'] = podjetja.dodaj_vrstico(ime=self.povzrocitelj)
         else:
             sl['povzrocitelj']  = None
         with conn:
@@ -333,10 +337,15 @@ class Odpadek(Ekol):
         self.prejemnik = prejemnik
         sl = dict()
         if self.prejemnik:
-            sl['prejemnik'] = conn.execute("""
-                    SELECT id FROM podjetje
-                    WHERE ime = ?;
-                """, [self.prejemnik.upper()]).fetchone()[0]
+            self.prejemnik = self.prejemnik.upper()
+            try:
+                sl['prejemnik'] = conn.execute("""
+                        SELECT id FROM podjetje
+                        WHERE ime = ?;
+                    """, [self.prejemnik]).fetchone()[0]
+            except:
+                with conn:
+                    sl['prejemnik'] = podjetja.dodaj_vrstico(ime=self.prejemnik)
         else:
             sl['prejemnik'] = None
         sl['datum_izvoza'] = datum_izvoza
@@ -353,5 +362,6 @@ class Odpadek(Ekol):
                     self.datum_uvoza,
                     self.klasifikacijska_stevilka,
                     self.skladisce]).fetchone()[0]
+        print(id)
         with conn:
             odpadek.za_izvoz(id, sl)
