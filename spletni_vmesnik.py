@@ -50,6 +50,8 @@ def izberi():
 # UVOZ ODPADKA ------------------------------------------------------------------------------------------
 @get('/uvoz_odpadka')
 def uvoz_odpadka():
+    opomba = [(id, ime) for id, ime in Opomba.opomba()]
+    print(opomba)
     return template('uvoz_odpadka.html')
 
 
