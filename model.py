@@ -16,6 +16,7 @@ class LoginError(Exception):
     pass
 
 
+# ----------------------------------------------------------------------------------------------------
 class Uporabnik(Ekol):
     """
     Razred za uporabnika.
@@ -62,7 +63,7 @@ class Uporabnik(Ekol):
             self.id = uporabnik.dodaj_vrstico(ime=self.ime, zgostitev=zgostitev, sol=sol)
 
 
-
+# ----------------------------------------------------------------------------------------------------
 class Podjetja(Ekol):
     def __init__(self, ime, id = None):
         self.id = id
@@ -88,6 +89,7 @@ class Podjetja(Ekol):
                             WEHERE id = ?;''', (id)).fetchone()
 
 
+# ----------------------------------------------------------------------------------------------------
 class Opomba(Ekol):
     def __init__(self, ime, id = None):
         self.id = id
@@ -104,6 +106,20 @@ class Opomba(Ekol):
             id = opomba.dodaj_vrstico(ime=self.ime)
             self.id = id
 
+    
+    @staticmethod
+    def opomba():
+        '''
+            vrne tabelo vseh parov opomb (id, ime)
+        '''
+        return [(id, ime) for id, ime in conn.execute('''
+                SELECT *
+                FROM opomba
+            ;''')]
+
+        
+
+# ----------------------------------------------------------------------------------------------------
 class VrstaOdpadka(Ekol):
     def __init__(self, klasifikacijska_stevilka, naziv):
         self.klasifikacijska_stevilka = klasifikacijska_stevilka
@@ -119,6 +135,18 @@ class VrstaOdpadka(Ekol):
             vrsta_odpadka.dodaj_vrstico(klasifikacijska_stevilka=self.klasifikacijska_stevilka, naziv=self.naziv)
 
 
+    @staticmethod
+    def vrsta_odpadka():
+        '''
+            vrne tabelo vseh parov vrst odpadkov (klas_st, naziv)
+        '''
+        return [(klas_st, naziv) for klas_st, naziv in conn.execute('''
+                SELECT *
+                FROM vrsta_odpadka
+            ;''')]
+
+
+# ----------------------------------------------------------------------------------------------------
 class Skladisce(Ekol):
     def __init__(self, id, ime=None):
         self.id = id
@@ -135,6 +163,17 @@ class Skladisce(Ekol):
 
 
     @staticmethod
+    def skladisce():
+        '''
+            vrne tabelo vseh parov skladišč (id, ime)
+        '''
+        return [(id, ime) for id, ime in conn.execute('''
+                SELECT *
+                FROM skladisce
+            ;''')]
+
+
+    @staticmethod
     def teza(id):
         koliko = conn.execute('''
             SELECT SUM(teza) 
@@ -145,8 +184,13 @@ class Skladisce(Ekol):
             id]).fetchone()
         return koliko[0]
 
+
     @staticmethod
     def st_kl_skladisce(skladisce):
+        '''
+            kliče: Skladisce.st_kl_skladisce(index skladišča)
+            izpiše pa ime odpadka, kl. stevilko, in število teh odpadkov v skladiču za katerega nas zanima
+        '''
         sql = '''SELECT vrsta_odpadka.naziv,
                         odpadek.klasifikacijska_stevilka,
                         COUNT(odpadek.klasifikacijska_stevilka) 
@@ -166,6 +210,8 @@ class Skladisce(Ekol):
     @staticmethod
     def skladisce_kl_st_uvoz_stolpci(skladisce, kl, *stolpci):
         '''
+            kliče se: Skladisce.skladisce_kl_st_uvoz(indeks skladišča, kl. stevilka, brez parametrov vse v spodnji
+                                                        tabeli, lahko pa tudi zgolj katero)
             v *stolpaci so lahko absolutno poimenova stolpci, brez argumentov se uporablja:
             odpadek.id,
             odpadek.klasifikacijska_stevilka,
@@ -220,6 +266,8 @@ class Skladisce(Ekol):
     @staticmethod
     def skladisce_splosno_stolpci(*stolpci):
         '''
+            kliče se: Skladisce.skladisce_splosno_stolpci(brez parametrov izpiše prvi seznam),
+                                                         (za parametre nalhko uporabimo samo elemente v drugi tabeli)
             v *stolpaci so lahko absolutno poimenova stolpci, brez argumentov se uporablja:
             odpadek.id,
             odpadek.teza,
@@ -286,7 +334,7 @@ class Skladisce(Ekol):
             print((vrstica))
 
 
-
+# ----------------------------------------------------------------------------------------------------
 class Odpadek(Ekol):
     def __init__(self, teza, klasifikacijska_stevilka, skladisce,
      datum_uvoza, povzrocitelj = None, opomba_uvoz=None):
@@ -317,10 +365,14 @@ class Odpadek(Ekol):
 
         # potrebujemo index
         if self.povzrocitelj:
-            sl['povzrocitelj'] = conn.execute("""
-                    SELECT id FROM podjetje
-                    WHERE ime = ?;
-                """, [self.povzrocitelj]).fetchone()[0]
+            try:
+                sl['povzrocitelj'] = conn.execute("""
+                        SELECT id FROM podjetje
+                        WHERE ime = ?;
+                    """, [self.povzrocitelj]).fetchone()[0]
+            except:
+                with conn:
+                    sl['povzrocitelj'] = podjetja.dodaj_vrstico(ime=self.povzrocitelj)
         else:
             sl['povzrocitelj']  = None
         with conn:
@@ -333,10 +385,15 @@ class Odpadek(Ekol):
         self.prejemnik = prejemnik
         sl = dict()
         if self.prejemnik:
-            sl['prejemnik'] = conn.execute("""
-                    SELECT id FROM podjetje
-                    WHERE ime = ?;
-                """, [self.prejemnik.upper()]).fetchone()[0]
+            self.prejemnik = self.prejemnik.upper()
+            try:
+                sl['prejemnik'] = conn.execute("""
+                        SELECT id FROM podjetje
+                        WHERE ime = ?;
+                    """, [self.prejemnik]).fetchone()[0]
+            except:
+                with conn:
+                    sl['prejemnik'] = podjetja.dodaj_vrstico(ime=self.prejemnik)
         else:
             sl['prejemnik'] = None
         sl['datum_izvoza'] = datum_izvoza
@@ -353,5 +410,6 @@ class Odpadek(Ekol):
                     self.datum_uvoza,
                     self.klasifikacijska_stevilka,
                     self.skladisce]).fetchone()[0]
+        print(id)
         with conn:
             odpadek.za_izvoz(id, sl)

@@ -36,8 +36,10 @@
 														</dt>
 														<dt> <select name="skladisce" id="skladisce" class="primary">
 														<option value="">- Skladišče -</option>
-														<option value="3">Skladišče 3</option>
-														<option value="7">Skladišče 7</option>
+														% from model import Skladisce
+														% for id, ime in Skladisce.skladisce():
+															<option value={{id}}>{{ime}}</option>
+														% end
 														</select>
 														</dt>
 														<h4>Podatki o odstranjevanju:</h4>
@@ -47,18 +49,10 @@
 														</dt>
 														<dt> <select name="opomba_izvoza" id="opomba_izvoza" />
 														<option value="">- Opomba -</option>
-														<option value=2>Elan</option>
-														<option value=9>HDPE</option>
-														<option value=3>HERZ</option>
-														<option value=1>Sauber</option>
-														<option value=4>mletje</option>
-														<option value=5>sveče</option>
-														<option value=6>EKO-1</option>
-														<option value=10>EKO-2</option>
-														<option value=11>ZOKI-1</option>
-														<option value=7>odcejeno</option>
-														<option value=8>napaka</option>
-														<option value=12>ostalo</option>
+														% from model import Opomba
+														% for id, ime in Opomba.opomba():
+															<option value={{id}}>{{ime}}</option>
+														% end
 														</select>			
 														</dt>
 														<dt><input type="submit" value="Odstrani" class="primary" onclick="if (!confirm('Ali res želite izvoziti odpadek?')) return false;;"/><dt>
