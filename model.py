@@ -187,6 +187,10 @@ class Skladisce(Ekol):
 
     @staticmethod
     def st_kl_skladisce(skladisce):
+        '''
+            kliče: Skladisce.st_kl_skladisce(index skladišča)
+            izpiše pa ime odpadka, kl. stevilko, in število teh odpadkov v skladiču za katerega nas zanima
+        '''
         sql = '''SELECT vrsta_odpadka.naziv,
                         odpadek.klasifikacijska_stevilka,
                         COUNT(odpadek.klasifikacijska_stevilka) 
@@ -206,6 +210,8 @@ class Skladisce(Ekol):
     @staticmethod
     def skladisce_kl_st_uvoz_stolpci(skladisce, kl, *stolpci):
         '''
+            kliče se: Skladisce.skladisce_kl_st_uvoz(indeks skladišča, kl. stevilka, brez parametrov vse v spodnji
+                                                        tabeli, lahko pa tudi zgolj katero)
             v *stolpaci so lahko absolutno poimenova stolpci, brez argumentov se uporablja:
             odpadek.id,
             odpadek.klasifikacijska_stevilka,
@@ -260,6 +266,8 @@ class Skladisce(Ekol):
     @staticmethod
     def skladisce_splosno_stolpci(*stolpci):
         '''
+            kliče se: Skladisce.skladisce_splosno_stolpci(brez parametrov izpiše prvi seznam),
+                                                         (za parametre nalhko uporabimo samo elemente v drugi tabeli)
             v *stolpaci so lahko absolutno poimenova stolpci, brez argumentov se uporablja:
             odpadek.id,
             odpadek.teza,
