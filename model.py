@@ -16,6 +16,7 @@ class LoginError(Exception):
     pass
 
 
+# ----------------------------------------------------------------------------------------------------
 class Uporabnik(Ekol):
     """
     Razred za uporabnika.
@@ -62,7 +63,7 @@ class Uporabnik(Ekol):
             self.id = uporabnik.dodaj_vrstico(ime=self.ime, zgostitev=zgostitev, sol=sol)
 
 
-
+# ----------------------------------------------------------------------------------------------------
 class Podjetja(Ekol):
     def __init__(self, ime, id = None):
         self.id = id
@@ -88,6 +89,7 @@ class Podjetja(Ekol):
                             WEHERE id = ?;''', (id)).fetchone()
 
 
+# ----------------------------------------------------------------------------------------------------
 class Opomba(Ekol):
     def __init__(self, ime, id = None):
         self.id = id
@@ -104,6 +106,20 @@ class Opomba(Ekol):
             id = opomba.dodaj_vrstico(ime=self.ime)
             self.id = id
 
+    
+    @staticmethod
+    def opomba():
+        '''
+            vrne tabelo vseh parov opomb (id, ime)
+        '''
+        return [(id, ime) for id, ime in conn.execute('''
+                SELECT *
+                FROM opomba
+            ;''')]
+
+        
+
+# ----------------------------------------------------------------------------------------------------
 class VrstaOdpadka(Ekol):
     def __init__(self, klasifikacijska_stevilka, naziv):
         self.klasifikacijska_stevilka = klasifikacijska_stevilka
@@ -119,6 +135,18 @@ class VrstaOdpadka(Ekol):
             vrsta_odpadka.dodaj_vrstico(klasifikacijska_stevilka=self.klasifikacijska_stevilka, naziv=self.naziv)
 
 
+    @staticmethod
+    def vrsta_odpadka():
+        '''
+            vrne tabelo vseh parov vrst odpadkov (klas_st, naziv)
+        '''
+        return [(klas_st, naziv) for klas_st, naziv in conn.execute('''
+                SELECT *
+                FROM vrsta_odpadka
+            ;''')]
+
+
+# ----------------------------------------------------------------------------------------------------
 class Skladisce(Ekol):
     def __init__(self, id, ime=None):
         self.id = id
@@ -135,6 +163,17 @@ class Skladisce(Ekol):
 
 
     @staticmethod
+    def skladisce():
+        '''
+            vrne tabelo vseh parov skladišč (id, ime)
+        '''
+        return [(id, ime) for id, ime in conn.execute('''
+                SELECT *
+                FROM skladisce
+            ;''')]
+
+
+    @staticmethod
     def teza(id):
         koliko = conn.execute('''
             SELECT SUM(teza) 
@@ -144,6 +183,7 @@ class Skladisce(Ekol):
             [
             id]).fetchone()
         return koliko[0]
+
 
     @staticmethod
     def st_kl_skladisce(skladisce):
@@ -286,7 +326,7 @@ class Skladisce(Ekol):
             print((vrstica))
 
 
-
+# ----------------------------------------------------------------------------------------------------
 class Odpadek(Ekol):
     def __init__(self, teza, klasifikacijska_stevilka, skladisce,
      datum_uvoza, povzrocitelj = None, opomba_uvoz=None):
