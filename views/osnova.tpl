@@ -10,7 +10,7 @@
 		<meta name="author" content="Tamara Pogačar, Matej Čušin">
 		<meta name="keywords" content="Ekol" />
 		
-		<link rel="stylesheet" href='../static/assets/css/main.css'/>
+		<link rel="stylesheet" href='/static/assets/css/main.css'/>
 
 	</head>
 	<body class="is-preload">
@@ -27,9 +27,9 @@
 			<nav id="menu">
 				<ul class="links">
 					<li><a href="/">Domov</a></li>
-					<li><a href="uvoz_odpadka">Uvoz odpadka</a></li>
-					<li><a href="izvoz_odpadka">Izvoz odpadka</a></li>
-					<li><a href="pregled">Pregled skladiščenih odpadkov</a></li>
+					<li><a href="/uvoz_odpadka">Uvoz odpadka</a></li>
+					<li><a href="/izvoz_odpadka">Izvoz odpadka</a></li>
+					<li><a href="/pregled">Pregled skladiščenih odpadkov</a></li>
 				</ul>
 			</nav>
 
@@ -57,18 +57,23 @@
 					</div>
 					<div class="copyright">
 						% data = {"developer_name": "Tamara Pogačar in Matej Čušin", "developer_organization": "Praktična matematika, FMF"}
-						% end
 						&copy; 2021, {{data["developer_name"]}} ({{data["developer_organization"]}})
 					</div>
 				</div>
 			</footer>
 
 		<!-- Scripts -->
-			<script src="../static/assets/js/jquery.min.js"></script>
-			<script src="../static/assets/js/browser.min.js"></script>
-			<script src="../static/assets/js/breakpoints.min.js"></script>
-			<script src="../static/assets/js/util.js"></script>
-			<script src="../static/assets/js/main.js"></script>
-		
+			<script src="/static/assets/js/jquery.min.js"></script>
+			<script src="/static/assets/js/browser.min.js"></script>
+			<script src="/static/assets/js/breakpoints.min.js"></script>
+			<script src="/static/assets/js/util.js"></script>
+			<script src="/static/assets/js/main.js"></script>
+
+			% if opozorilo:
+			<script type="text/javascript">
+				alert("{{opozorilo}}");
+			</script>
+			% end
+
 	</body>
 </html>

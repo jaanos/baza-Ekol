@@ -6,6 +6,14 @@ from bottle import *
 app = default_app()
 
 
+def template(predloga, /, opozorilo=None, **kwargs):
+    """
+    Povožena funkcija za predloge s podajanjem spremenljivke opozorilo.
+    """
+    from bottle import template
+    return template(predloga, opozorilo=opozorilo, **kwargs)
+
+
 # STATIC -----------------------------------------------------------------------------------------------
 @get('/static/<filename:path>')
 def server_static(filename):
@@ -32,19 +40,13 @@ def izbira_dejavnosti():
     '''
 
 @route('/izbira_dejavnosti', method='POST')
-@route('/uvoz_odpadka')
-@route('/odvoz_odpadka')
-@route('/pregled')
 def izberi():
-    dejavnost = request.forms.get('dejavnost')
-    if dejavnost == 'uvoz':
-        return template('uvoz_odpadka.html')
-    elif dejavnost == 'izvoz':
-        return template('izvoz_odpadka.html')
-    elif dejavnost == 'pregled':
-        return template('pregled.html')
-    else:  # dejavnost == ''
-        return '''<script>alert("Neveljavna izvira! Prosimo, poskusite ponovno.");</script>''', template('zacetna_stran.html')
+    pot = {'uvoz': '/uvoz_odpadka',
+           'izvoz': '/izvoz_odpadka',
+           'pregled': '/pregled'}.get(request.forms.get('dejavnost'), None)
+    if pot is None:
+        return template('zacetna_stran.html', opozorilo="Neveljavna izbira! Prosimo, poskusite ponovno.")
+    redirect(pot)
 
 
 # UVOZ ODPADKA ------------------------------------------------------------------------------------------
@@ -157,17 +159,17 @@ def izvozi_odpadek():
         prejemnik = None
 
     if datum_izvoza == '' or teza == '' or datum_uvoza == '' or klasifikacijska_stevilka == '' or skladisce == '':
-        return '''<script>alert("Neustrezni vnos! Prosimo, poskusite ponovno.");</script>''', template('izvoz_odpadka.html')
+        return template('izvoz_odpadka.html', opozorilo="Neustrezni vnos! Prosimo, poskusite ponovno.")
     
     try:
         odpadek = Odpadek(teza, klasifikacijska_stevilka, skladisce,
          datum_uvoza)
 
         odpadek.izvozi(datum_izvoza, opomba_izvoza, prejemnik)
-        return '''<script>alert("Odpadek je izvožen.");</script>''', template('zacetna_stran.html')
+        returntemplate('zacetna_stran.html', opozorilo="Odpadek je izvožen.")
 
     except:
-        return '''<script>alert("Izbranega odpadka ni na skladišču. Poskusi znova!");</script>''', template('izvoz_odpadka.html')
+        return template('izvoz_odpadka.html', opozorilo="Izbranega odpadka ni na skladišču. Poskusi znova!")
 
 
 # PREGLED SKLADIŠČENIH ODPADKOV --------------------------------------------------------------------------
@@ -186,22 +188,14 @@ def filtriraj():
     '''
 
 @route('/filtriraj', method='POST')
-@route('/kolicina')
-@route('/skupna_teza')
-@route('/vsi')
-@route('/zadnji')
 def filtriraj_odpadke():
-    dejavnost = request.forms.get('pregled')
-    if dejavnost == 'kolicina':
-        return template('kolicina.html')
-    elif dejavnost == 'skupna_teza':
-        return template('skupna_teza.html')
-    elif dejavnost == 'vsi':
-        return template('vsi.html')
-    elif dejavnost == 'zadnji':
-        return template('zadnji.html')
-    else:  # dejavnost == ''
-        return '''<script>alert("Neveljavna izvira! Prosimo, poskusite ponovno.");</script>''', template('pregled.html')
+    pot = {'kolicina': '/kolicina',
+           'skupna_teza': '/skupna_teza',
+           'vsi': '/vsi',
+           'zadnji': '/zadnji'}.get(request.forms.get('pregled'), None)
+    if pot is None:  # dejavnost == ''
+        return template('pregled.html', opozorilo="Neveljavna izbira! Prosimo, poskusite ponovno.")
+    redirect(pot)
 
 
 # KOLIČINA POSAMEZNIH ODPADKOV (GLEDE NA KLAS. ŠT.) ------------------------------------------------------------------------------
